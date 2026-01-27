@@ -88,5 +88,5 @@ Una vez levantado el servidor, accede a la interfaz visual de Swagger para proba
 ---
 
 <p align="center">
-  Desarrollado con ❤️ y Java para el Proyecto Final de DAW
+  Desarrollado con ❤️ y Java para el Proyecto Final del 2º Trimestre de DAW
 </p>
