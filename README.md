@@ -84,7 +84,6 @@ Para no exponer la estructura interna de la base de datos, utilizo el patrón DT
 
 Una vez levantado el servidor, accede a la interfaz visual de Swagger para probar los endpoints:
 
-👉 **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
 
 ---
 
