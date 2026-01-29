@@ -24,6 +24,41 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final UsuarioMapper usuarioMapper;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional
+    public UsuarioResponse crearUsuario(UsuarioRequest request) {
+        if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new ReglaNegocioException("El email " + request.getEmail() + " ya está en uso.");
+        }
+        if (usuarioRepository.findByDni(request.getDni()).isPresent()) {
+            throw new ReglaNegocioException("El DNI " + request.getDni() + " ya está registrado.");
+        }
+
+        Rol rol = rolRepository.findById(request.getRolId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado con ID: " + request.getRolId()));
+
+        Usuario usuario = new Usuario();
+        usuario.setNombre(request.getNombre());
+        usuario.setApellidos(request.getApellidos());
+        usuario.setEmail(request.getEmail());
+        usuario.setDni(request.getDni());
+        usuario.setTelefono(request.getTelefono());
+        usuario.setFechaNacimiento(request.getFechaNacimiento());
+        usuario.setDireccion("Sin dirección"); // Default or add to Request
+        usuario.setCiudad("Sin ciudad");
+        usuario.setCodigoPostal("00000");
+        usuario.setPais("España");
+
+        usuario.setContraseña(passwordEncoder.encode(request.getPassword()));
+        usuario.setRol(rol);
+        usuario.setActivo(request.getActivo() != null ? request.getActivo() : true);
+        usuario.setTipoUsuario(rol.getNombre()); // Legacy field
+
+        Usuario guardado = usuarioRepository.save(usuario);
+        return usuarioMapper.toResponse(guardado);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -62,7 +97,8 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
         if (request.getRolId() != null) {
             Rol nuevoRol = rolRepository.findById(request.getRolId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado con ID: " + request.getRolId()));
+                    .orElseThrow(
+                            () -> new RecursoNoEncontradoException("Rol no encontrado con ID: " + request.getRolId()));
             usuarioExistente.setRol(nuevoRol);
         }
 

@@ -12,6 +12,8 @@ public interface IUsuarioService {
 
     UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request);
 
+    UsuarioResponse crearUsuario(UsuarioRequest request);
+
     void eliminarUsuario(Integer id);
 
     UsuarioResponse buscarPorDni(String dni);

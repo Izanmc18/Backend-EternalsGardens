@@ -22,5 +22,6 @@ public class DifuntoResponse {
     private String notas;
     private String fotoPerfil;
     private String biografiaDigital;
+    private String parcelaUbicacion;
 
 }

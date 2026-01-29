@@ -24,6 +24,13 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.obtenerTodos());
     }
 
+    @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponse> crearUsuario(@Valid @RequestBody UsuarioRequest request) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(usuarioService.crearUsuario(request));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR') or @userSecurity.esElMismoUsuario(#id)")
     public ResponseEntity<UsuarioResponse> obtenerPorId(@PathVariable Integer id) {
