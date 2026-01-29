@@ -25,6 +25,12 @@ public class DifuntoController {
         return ResponseEntity.ok(difuntoService.obtenerTodos());
     }
 
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")
+    public ResponseEntity<List<DifuntoResponse>> buscarDifuntos(@RequestParam("q") String query) {
+        return ResponseEntity.ok(difuntoService.buscarDifuntos(query));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")
     public ResponseEntity<DifuntoResponse> obtenerPorId(@PathVariable Integer id) {

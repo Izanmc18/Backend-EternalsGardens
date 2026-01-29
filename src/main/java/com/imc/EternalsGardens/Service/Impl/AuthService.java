@@ -22,64 +22,70 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UsuarioRepository usuarioRepository;
-    private final RolRepository rolRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtils jwtUtils;
-    private final AuthenticationManager authenticationManager;
-    private final UserDetailsServiceImpl userDetailsService;
+        private final UsuarioRepository usuarioRepository;
+        private final RolRepository rolRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final JwtUtils jwtUtils;
+        private final AuthenticationManager authenticationManager;
+        private final UserDetailsServiceImpl userDetailsService;
 
-    // MÉTODO DE REGISTRO
-    public AuthResponse register(UsuarioRequest request) {
+        // MÉTODO DE REGISTRO
+        public AuthResponse register(UsuarioRequest request) {
 
+                Usuario usuario = new Usuario();
+                usuario.setNombre(request.getNombre());
+                usuario.setApellidos(request.getApellidos());
+                usuario.setEmail(request.getEmail());
+                usuario.setDni(request.getDni());
+                usuario.setTelefono(request.getTelefono());
+                usuario.setFechaNacimiento(request.getFechaNacimiento());
+                usuario.setActivo(true);
+                usuario.setFechaCreacion(LocalDateTime.now());
 
-        Usuario usuario = new Usuario();
-        usuario.setNombre(request.getNombre());
-        usuario.setApellidos(request.getApellidos());
-        usuario.setEmail(request.getEmail());
-        usuario.setDni(request.getDni());
-        usuario.setTelefono(request.getTelefono());
-        usuario.setFechaNacimiento(request.getFechaNacimiento());
-        usuario.setActivo(true);
-        usuario.setFechaCreacion(LocalDateTime.now());
+                usuario.setContraseña(passwordEncoder.encode(request.getPassword()));
 
+                Rol rol = rolRepository.findById(request.getRolId())
+                                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
+                usuario.setRol(rol);
 
-        usuario.setContraseña(passwordEncoder.encode(request.getPassword()));
+                usuarioRepository.save(usuario);
 
-        Rol rol = rolRepository.findById(request.getRolId())
-                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
-        usuario.setRol(rol);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(usuario.getEmail());
+                String token = jwtUtils.generateToken(userDetails);
 
-        usuarioRepository.save(usuario);
+                return AuthResponse.builder()
+                                .token(token)
+                                .nombreUsuario(usuario.getNombre())
+                                .rol(usuario.getRol().getNombre())
+                                .build();
+        }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(usuario.getEmail());
-        String token = jwtUtils.generateToken(userDetails);
+        // MÉTODO DE LOGIN
+        public AuthResponse login(LoginRequest request) {
+                System.out.println(">>> [DEBUG] AuthService.login llamado con: " + request.getEmail());
 
-        return AuthResponse.builder()
-                .token(token)
-                .nombreUsuario(usuario.getNombre())
-                .rol(usuario.getRol().getNombre())
-                .build();
-    }
+                try {
+                        authenticationManager.authenticate(
+                                        new UsernamePasswordAuthenticationToken(request.getEmail(),
+                                                        request.getPassword()));
+                        System.out.println(">>> [DEBUG] Autenticación exitosa en Manager");
+                } catch (Exception e) {
+                        System.out.println(">>> [DEBUG] ERROR en Autenticación: " + e.getMessage());
+                        e.printStackTrace();
+                        throw e;
+                }
 
-    // MÉTODO DE LOGIN
-    public AuthResponse login(LoginRequest request) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+                Usuario usuario = usuarioRepository.findByEmail(request.getEmail()).orElseThrow();
 
+                String token = jwtUtils.generateToken(userDetails);
+                System.out.println(">>> [DEBUG] Token generado exitosamente");
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
-
-        Usuario usuario = usuarioRepository.findByEmail(request.getEmail()).orElseThrow();
-
-        String token = jwtUtils.generateToken(userDetails);
-
-        return AuthResponse.builder()
-                .token(token)
-                .nombreUsuario(usuario.getNombre())
-                .rol(usuario.getRol().getNombre())
-                .build();
-    }
+                return AuthResponse.builder()
+                                .token(token)
+                                .nombreUsuario(usuario.getNombre())
+                                .rol(usuario.getRol().getNombre())
+                                .build();
+        }
 }

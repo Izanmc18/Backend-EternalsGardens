@@ -12,25 +12,80 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class DifuntoServiceImpl implements IDifuntoService {
 
     private final DifuntoRepository difuntoRepository;
+    private final com.imc.EternalsGardens.Repository.ParcelaRepository parcelaRepository;
     private final DifuntoMapper difuntoMapper;
 
     @Override
     @Transactional
     public DifuntoResponse crearDifunto(DifuntoRequest request) {
-        Difunto difunto = difuntoMapper.toEntity(request);
-        return difuntoMapper.toResponse(difuntoRepository.save(difunto));
+        System.out.println("DEBUG: Inicio crearDifunto");
+        try {
+            String normalizedDni = request.getDni().trim().toUpperCase();
+            System.out.println("DEBUG: DNI normalizado: " + normalizedDni);
+
+            Optional<Difunto> existing = difuntoRepository.findByDni(normalizedDni);
+            if (existing.isPresent()) {
+                System.out.println("DEBUG: DNI duplicado encontrado: " + existing.get().getId());
+                throw new com.imc.EternalsGardens.Exception.ReglaNegocioException(
+                        "Ya existe un difunto registrado con el DNI " + normalizedDni);
+            }
+
+            // Update request
+            request.setDni(normalizedDni);
+
+            System.out.println("DEBUG: Mapeando a entidad...");
+            Difunto difunto = difuntoMapper.toEntity(request);
+            System.out.println("DEBUG: Mapeo correcto. Entidad: " + difunto);
+
+            if (request.getParcelaId() != null) {
+                System.out.println("DEBUG: Buscando parcela ID: " + request.getParcelaId());
+                com.imc.EternalsGardens.Entity.Parcela parcela = parcelaRepository.findById(request.getParcelaId())
+                        .orElseThrow(() -> new RecursoNoEncontradoException(
+                                "Parcela no encontrada ID: " + request.getParcelaId()));
+
+                System.out.println("DEBUG: Parcela encontrada. Estado: " + parcela.getEstado());
+                if (!"LIBRE".equalsIgnoreCase(parcela.getEstado())) {
+                    throw new com.imc.EternalsGardens.Exception.ReglaNegocioException(
+                            "La parcela seleccionada no está disponible (Estado: " + parcela.getEstado() + ")");
+                }
+
+                parcela.setEstado("OCUPADA");
+                parcelaRepository.save(parcela);
+                difunto.setParcela(parcela);
+                System.out.println("DEBUG: Parcela asignada y actualizada.");
+            }
+
+            System.out.println("DEBUG: Guardando difunto en BD...");
+            Difunto guardado = difuntoRepository.save(difunto);
+            System.out.println("DEBUG: Difunto guardado ID: " + guardado.getId());
+
+            return difuntoMapper.toResponse(guardado);
+        } catch (Exception e) {
+            System.out.println("ERROR CRITICO EN CREARDIFUNTO:");
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<DifuntoResponse> obtenerTodos() {
         return difuntoMapper.toResponseList(difuntoRepository.findAll());
+    }
+
+    @Override
+    public List<DifuntoResponse> buscarDifuntos(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return obtenerTodos();
+        }
+        return difuntoMapper.toResponseList(difuntoRepository.buscarGlobal(query.trim()));
     }
 
     @Override

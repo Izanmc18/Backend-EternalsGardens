@@ -46,4 +46,8 @@ public class Difunto {
 
     @Column(columnDefinition = "TEXT")
     private String biografiaDigital;
+
+    @ManyToOne
+    @JoinColumn(name = "parcela_id")
+    private Parcela parcela;
 }
