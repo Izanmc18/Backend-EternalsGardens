@@ -20,8 +20,10 @@ public class UsuarioController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<List<UsuarioResponse>> obtenerTodos() {
-        return ResponseEntity.ok(usuarioService.obtenerTodos());
+    public ResponseEntity<org.springframework.data.domain.Page<UsuarioResponse>> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable,
+            @RequestParam(required = false) String rol) {
+        return ResponseEntity.ok(usuarioService.obtenerTodos(pageable, rol));
     }
 
     @PostMapping

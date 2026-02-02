@@ -20,11 +20,15 @@ public class CementerioController {
     private final ICementerioService cementerioService;
 
     @GetMapping
-    public ResponseEntity<List<CementerioResponse>> obtenerTodos() {
-        return ResponseEntity.ok(cementerioService.obtenerTodos());
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<org.springframework.data.domain.Page<CementerioResponse>> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable,
+            @RequestParam(required = false) String provincia) {
+        return ResponseEntity.ok(cementerioService.obtenerTodos(pageable, provincia));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<CementerioResponse> obtenerPorId(@PathVariable Integer id) {
         return ResponseEntity.ok(cementerioService.obtenerPorId(id));
     }

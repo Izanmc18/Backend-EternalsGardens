@@ -5,15 +5,25 @@ import com.imc.EternalsGardens.DTO.Response.DifuntoResponse;
 import java.util.List;
 
 public interface IDifuntoService {
-    DifuntoResponse crearDifunto(DifuntoRequest request);
+        DifuntoResponse crearDifunto(DifuntoRequest request);
 
-    List<DifuntoResponse> obtenerTodos();
+        List<DifuntoResponse> obtenerTodos();
 
-    List<DifuntoResponse> buscarDifuntos(String query);
+        List<DifuntoResponse> buscarDifuntos(String query);
 
-    DifuntoResponse obtenerPorId(Integer id);
+        DifuntoResponse obtenerPorId(Integer id);
 
-    DifuntoResponse actualizarDifunto(Integer id, DifuntoRequest request);
+        DifuntoResponse actualizarDifunto(Integer id, DifuntoRequest request);
 
-    void eliminarDifunto(Integer id);
+        void eliminarDifunto(Integer id);
+
+        org.springframework.data.domain.Page<DifuntoResponse> obtenerPorZona(
+                        Integer zonaId,
+                        org.springframework.data.domain.Pageable pageable);
+
+        org.springframework.data.domain.Page<DifuntoResponse> obtenerPorCementerio(
+                        Integer cementerioId,
+                        org.springframework.data.domain.Pageable pageable);
+
+        List<DifuntoResponse> obtenerPorUsuario(Integer usuarioId);
 }

@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface IUsuarioService {
 
-    List<UsuarioResponse> obtenerTodos();
+    org.springframework.data.domain.Page<UsuarioResponse> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable, String rol);
 
     UsuarioResponse obtenerPorId(Integer id);
 
@@ -17,4 +18,6 @@ public interface IUsuarioService {
     void eliminarUsuario(Integer id);
 
     UsuarioResponse buscarPorDni(String dni);
+
+    UsuarioResponse buscarPorEmail(String email);
 }

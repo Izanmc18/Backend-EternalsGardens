@@ -20,12 +20,12 @@ public class ManejadorGlobalExcepciones {
 
     // 1. Recurso No Encontrado (404)
     @ExceptionHandler(RecursoNoEncontradoException.class)
-    public ResponseEntity<ApiError> manejarRecursoNoEncontrado(RecursoNoEncontradoException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiError> manejarRecursoNoEncontrado(RecursoNoEncontradoException ex,
+            HttpServletRequest request) {
         ApiError error = new ApiError(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage(),
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
@@ -35,19 +35,17 @@ public class ManejadorGlobalExcepciones {
         ApiError error = new ApiError(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     // 3. Credenciales Inválidas (401)
-    @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
+    @ExceptionHandler({ BadCredentialsException.class, UsernameNotFoundException.class })
     public ResponseEntity<ApiError> manejarCredencialesInvalidas(Exception ex, HttpServletRequest request) {
         ApiError error = new ApiError(
                 HttpStatus.UNAUTHORIZED,
                 "Credenciales de acceso incorrectas",
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
@@ -57,14 +55,14 @@ public class ManejadorGlobalExcepciones {
         ApiError error = new ApiError(
                 HttpStatus.FORBIDDEN,
                 "No tienes permisos suficientes para realizar esta acción.",
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
     // 5. Validaciones de Formularios (@Valid) (400)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> manejarValidaciones(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiError> manejarValidaciones(MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
         String mensajesError = ex.getBindingResult().getAllErrors().stream()
                 .map(objectError -> {
                     if (objectError instanceof FieldError) {
@@ -77,35 +75,35 @@ public class ManejadorGlobalExcepciones {
         ApiError error = new ApiError(
                 HttpStatus.BAD_REQUEST,
                 "Error en los datos enviados: " + mensajesError,
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     // 6. Integridad de Datos / Duplicados (409) - ¡NUEVO!
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> manejarViolacionIntegridad(DataIntegrityViolationException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiError> manejarViolacionIntegridad(DataIntegrityViolationException ex,
+            HttpServletRequest request) {
         String mensaje = "Error de integridad en la base de datos.";
-        if (ex.getCause() != null && ex.getCause().getMessage() != null && ex.getCause().getMessage().toLowerCase().contains("duplicate")) {
+        if (ex.getCause() != null && ex.getCause().getMessage() != null
+                && ex.getCause().getMessage().toLowerCase().contains("duplicate")) {
             mensaje = "Ya existe un registro con esos datos (posiblemente email, DNI o código duplicado).";
         }
 
         ApiError error = new ApiError(
                 HttpStatus.CONFLICT,
                 mensaje,
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
     // 7. JSON Mal formado (400) - ¡NUEVO!
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiError> manejarJsonMalFormado(HttpMessageNotReadableException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiError> manejarJsonMalFormado(HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
         ApiError error = new ApiError(
                 HttpStatus.BAD_REQUEST,
                 "El formato del JSON es incorrecto o contiene valores inválidos (revisa fechas, números o enums).",
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
@@ -115,9 +113,8 @@ public class ManejadorGlobalExcepciones {
         ex.printStackTrace();
         ApiError error = new ApiError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ha ocurrido un error interno en el servidor. Contacte al administrador.",
-                request.getRequestURI()
-        );
+                "Ha ocurrido un error interno en el servidor: " + ex.getMessage(), // LEAKING ERROR FOR DEBUGGING
+                request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

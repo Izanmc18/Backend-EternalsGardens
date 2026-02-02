@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AuthResponse {
 
+    private Integer id;
     private String token;
     private String rol;
     private String nombreUsuario;
+    private String fotoUrl;
 }

@@ -33,7 +33,8 @@ public class CementerioServiceImpl implements ICementerioService {
 
         if (request.getResponsableId() != null) {
             Usuario responsable = usuarioRepository.findById(request.getResponsableId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Usuario responsable no encontrado con ID: " + request.getResponsableId()));
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                            "Usuario responsable no encontrado con ID: " + request.getResponsableId()));
             cementerio.setResponsable(responsable);
         }
 
@@ -51,10 +52,51 @@ public class CementerioServiceImpl implements ICementerioService {
 
     @Override
     @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<CementerioResponse> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable) {
+        return cementerioRepository.findAll(pageable).map(cementerioMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<CementerioResponse> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable,
+            String provincia) {
+        org.springframework.data.domain.Page<Cementerio> cementerios;
+
+        if (provincia != null && !provincia.isEmpty()) {
+            cementerios = cementerioRepository.findByProvincia(provincia, pageable);
+        } else {
+            cementerios = cementerioRepository.findAll(pageable);
+        }
+
+        return cementerios.map(cementerioMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public CementerioResponse obtenerPorId(Integer id) {
         Cementerio cementerio = cementerioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cementerio no encontrado con ID: " + id));
-        return cementerioMapper.toResponse(cementerio);
+
+        CementerioResponse response = cementerioMapper.toResponse(cementerio);
+
+        // Fetch Operators
+        List<Usuario> operadores = usuarioRepository.findByCementerioIdAndRolNombre(id, "OPERADOR_CEMENTERIO");
+        // Map to OperadorResponse
+        List<com.imc.EternalsGardens.DTO.Response.OperadorResponse> operadorResponses = operadores.stream().map(op -> {
+            com.imc.EternalsGardens.DTO.Response.OperadorResponse dto = new com.imc.EternalsGardens.DTO.Response.OperadorResponse();
+            dto.setId(op.getId());
+            dto.setNombre(op.getNombre());
+            dto.setApellidos(op.getApellidos());
+            dto.setEmail(op.getEmail());
+            dto.setTelefono(op.getTelefono());
+            return dto;
+        }).toList();
+
+        response.setOperadores(operadorResponses);
+
+        return response;
     }
 
     @Override
@@ -71,7 +113,8 @@ public class CementerioServiceImpl implements ICementerioService {
 
             if (cambioResponsable) {
                 Usuario nuevoResponsable = usuarioRepository.findById(request.getResponsableId())
-                        .orElseThrow(() -> new RecursoNoEncontradoException("Usuario responsable no encontrado con ID: " + request.getResponsableId()));
+                        .orElseThrow(() -> new RecursoNoEncontradoException(
+                                "Usuario responsable no encontrado con ID: " + request.getResponsableId()));
                 cementerioExistente.setResponsable(nuevoResponsable);
             }
         } else {
@@ -86,7 +129,6 @@ public class CementerioServiceImpl implements ICementerioService {
     public void eliminarCementerio(Integer id) {
         Cementerio cementerio = cementerioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cementerio no encontrado con ID: " + id));
-
 
         cementerio.setActivo(false);
         cementerioRepository.save(cementerio);
@@ -103,7 +145,6 @@ public class CementerioServiceImpl implements ICementerioService {
     @Override
     public List<CementerioResponse> buscarPorNombreOLocalizacion(String busqueda) {
         return cementerioMapper.toResponseList(
-                cementerioRepository.buscarPorNombreOLocalizacion(busqueda)
-        );
+                cementerioRepository.buscarPorNombreOLocalizacion(busqueda));
     }
 }

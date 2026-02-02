@@ -56,14 +56,19 @@ public class Usuario {
     @Column
     private LocalDate fechaNacimiento;
 
-
     @Column(name = "tipo_usuario", length = 50)
     private String tipoUsuario;
 
+    @Column(name = "foto_url", columnDefinition = "TEXT")
+    private String fotoUrl;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "cementerio_id")
+    private Cementerio cementerio;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();

@@ -12,6 +12,13 @@ public interface ICementerioService {
 
     List<CementerioResponse> obtenerTodos();
 
+    org.springframework.data.domain.Page<CementerioResponse> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable);
+
+    org.springframework.data.domain.Page<CementerioResponse> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable,
+            String provincia);
+
     CementerioResponse obtenerPorId(Integer id);
 
     CementerioResponse actualizarCementerio(Integer id, CementerioRequest request);

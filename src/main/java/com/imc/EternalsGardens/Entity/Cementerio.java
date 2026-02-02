@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
  *
  * RELACIONES:
  * <ul>
- *   <li>responsable: Usuario que gestiona el cementerio</li>
- *   <li>zonas: Divisiones territoriales del cementerio</li>
+ * <li>responsable: Usuario que gestiona el cementerio</li>
+ * <li>zonas: Divisiones territoriales del cementerio</li>
  * </ul>
  *
  * @author Izan Martinez Castro
@@ -173,6 +173,18 @@ public class Cementerio {
      */
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean activo = true;
+
+    /**
+     * URL de la foto principal del cementerio.
+     *
+     * ANOTACIONES:
+     * - @Column(name = "foto_url"): Nombre de columna en la base de datos
+     * - columnDefinition = "TEXT": Tipo de dato TEXT para URLs largas
+     *
+     * USO: Almacenar la URL de una imagen representativa del cementerio.
+     */
+    @Column(name = "foto_url", columnDefinition = "TEXT")
+    private String fotoUrl;
 
     /**
      * Fecha y hora de creación del cementerio.

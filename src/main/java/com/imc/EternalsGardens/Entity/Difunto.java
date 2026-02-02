@@ -29,6 +29,9 @@ public class Difunto {
     @Column(nullable = false)
     private LocalDate fechaDefuncion;
 
+    @Column(columnDefinition = "TEXT")
+    private String fotoUrl;
+
     @Column(length = 20, unique = true)
     private String dni;
 

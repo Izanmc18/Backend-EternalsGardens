@@ -115,4 +115,28 @@ public class DifuntoServiceImpl implements IDifuntoService {
         }
         difuntoRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<DifuntoResponse> obtenerPorZona(
+            Integer zonaId,
+            org.springframework.data.domain.Pageable pageable) {
+        return difuntoRepository.findByZonaId(zonaId, pageable)
+                .map(difuntoMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<DifuntoResponse> obtenerPorCementerio(
+            Integer cementerioId,
+            org.springframework.data.domain.Pageable pageable) {
+        return difuntoRepository.findByCementerioId(cementerioId, pageable)
+                .map(difuntoMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DifuntoResponse> obtenerPorUsuario(Integer usuarioId) {
+        return difuntoMapper.toResponseList(difuntoRepository.findByParcela_Concesion_Usuario_Id(usuarioId));
+    }
 }

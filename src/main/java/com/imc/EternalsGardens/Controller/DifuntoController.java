@@ -5,6 +5,8 @@ import com.imc.EternalsGardens.DTO.Response.DifuntoResponse;
 import com.imc.EternalsGardens.Service.Interfaces.IDifuntoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,11 +20,27 @@ import java.util.List;
 public class DifuntoController {
 
     private final IDifuntoService difuntoService;
+    private final com.imc.EternalsGardens.Service.Interfaces.IUsuarioService usuarioService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")
-    public ResponseEntity<List<DifuntoResponse>> obtenerTodos() {
-        return ResponseEntity.ok(difuntoService.obtenerTodos());
+    public ResponseEntity<Page<DifuntoResponse>> obtenerTodos(
+            @RequestParam(required = false) Integer cementerioId,
+            @RequestParam(required = false) Integer zonaId,
+            Pageable pageable) {
+
+        // Si se proporciona zonaId, filtrar por zona
+        if (zonaId != null) {
+            return ResponseEntity.ok(difuntoService.obtenerPorZona(zonaId, pageable));
+        }
+
+        // Si se proporciona cementerioId, filtrar por cementerio
+        if (cementerioId != null) {
+            return ResponseEntity.ok(difuntoService.obtenerPorCementerio(cementerioId, pageable));
+        }
+
+        // Si no hay filtros, devolver página vacía
+        return ResponseEntity.ok(Page.empty(pageable));
     }
 
     @GetMapping("/search")
@@ -56,5 +74,13 @@ public class DifuntoController {
     public ResponseEntity<Void> eliminarDifunto(@PathVariable Integer id) {
         difuntoService.eliminarDifunto(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/mis-difuntos")
+    @PreAuthorize("hasRole('CIUDADANO')")
+    public ResponseEntity<List<DifuntoResponse>> obtenerMisDifuntos(java.security.Principal principal) {
+        String email = principal.getName();
+        var usuario = usuarioService.buscarPorEmail(email);
+        return ResponseEntity.ok(difuntoService.obtenerPorUsuario(usuario.getId()));
     }
 }

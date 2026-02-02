@@ -16,14 +16,14 @@ public class UsuarioMapper {
     private final ModelMapper modelMapper;
 
     public Usuario toEntity(UsuarioRequest request) {
-        if (request == null) return null;
+        if (request == null)
+            return null;
 
         Usuario usuario = modelMapper.map(request, Usuario.class);
 
         if (request.getPassword() != null) {
             usuario.setContraseña(request.getPassword());
         }
-
 
         usuario.setFechaCreacion(LocalDateTime.now());
         usuario.setFechaUltimaModificacion(LocalDateTime.now());
@@ -32,7 +32,8 @@ public class UsuarioMapper {
     }
 
     public UsuarioResponse toResponse(Usuario usuario) {
-        if (usuario == null) return null;
+        if (usuario == null)
+            return null;
 
         UsuarioResponse response = modelMapper.map(usuario, UsuarioResponse.class);
 
@@ -41,11 +42,17 @@ public class UsuarioMapper {
             response.setRolNombre(usuario.getRol().getNombre());
         }
 
+        if (usuario.getCementerio() != null) {
+            response.setCementerioId(usuario.getCementerio().getId());
+            response.setCementerioNombre(usuario.getCementerio().getNombre());
+        }
+
         return response;
     }
 
     public void updateEntity(UsuarioRequest request, Usuario usuarioExistente) {
-        if (request == null || usuarioExistente == null) return;
+        if (request == null || usuarioExistente == null)
+            return;
 
         usuarioExistente.setNombre(request.getNombre());
         usuarioExistente.setApellidos(request.getApellidos());
@@ -53,14 +60,14 @@ public class UsuarioMapper {
         usuarioExistente.setTelefono(request.getTelefono());
         usuarioExistente.setFechaNacimiento(request.getFechaNacimiento());
         usuarioExistente.setActivo(request.getActivo());
-
-
+        usuarioExistente.setFotoUrl(request.getFotoUrl());
 
         usuarioExistente.setFechaUltimaModificacion(LocalDateTime.now());
     }
 
     public List<UsuarioResponse> toResponseList(List<Usuario> usuarios) {
-        if (usuarios == null) return List.of();
+        if (usuarios == null)
+            return List.of();
         return usuarios.stream().map(this::toResponse).toList();
     }
 }

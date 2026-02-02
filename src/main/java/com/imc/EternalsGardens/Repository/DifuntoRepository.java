@@ -192,4 +192,58 @@ public interface DifuntoRepository extends JpaRepository<Difunto, Integer> {
         Long contarPorRangoFechas(@Param("inicio") LocalDate inicio,
                         @Param("fin") LocalDate fin);
 
+        // =====================================================================
+        // BÚSQUEDAS POR UBICACIÓN (ZONA Y CEMENTERIO)
+        // =====================================================================
+
+        /**
+         * Busca difuntos por zona específica con paginación.
+         *
+         * Se utiliza en la gestión de difuntos para filtrar por zona
+         * y evitar cargar todos los registros de la base de datos.
+         *
+         * @param zonaId   el ID de la zona
+         * @param pageable configuración de paginación
+         * @return página de difuntos de la zona especificada
+         */
+        @Query("SELECT d FROM Difunto d WHERE d.parcela.zona.id = :zonaId")
+        org.springframework.data.domain.Page<Difunto> findByZonaId(
+                        @Param("zonaId") Integer zonaId,
+                        org.springframework.data.domain.Pageable pageable);
+
+        /**
+         * Busca difuntos por cementerio (a través de zona) con paginación.
+         *
+         * Se utiliza para obtener todos los difuntos de un cementerio específico.
+         *
+         * @param cementerioId el ID del cementerio
+         * @param pageable     configuración de paginación
+         * @return página de difuntos del cementerio especificado
+         */
+        @Query("SELECT d FROM Difunto d WHERE d.parcela.zona.cementerio.id = :cementerioId")
+        org.springframework.data.domain.Page<Difunto> findByCementerioId(
+                        @Param("cementerioId") Integer cementerioId,
+                        org.springframework.data.domain.Pageable pageable);
+
+        // =====================================================================
+        // ESTADÍSTICAS
+        // =====================================================================
+
+        /**
+         * Obtiene la cantidad de difuntos registrados por mes en los últimos 12 meses.
+         * Útil para gráficos de tendencias.
+         * 
+         * @return Lista de arrays de objetos [mes (String YYYY-MM), cantidad (Long)]
+         */
+        @Query(value = "SELECT DATE_FORMAT(d.fecha_defuncion, '%Y-%m') as mes, COUNT(*) as cantidad " +
+                        "FROM difunto d " +
+                        "WHERE d.fecha_defuncion >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) " +
+                        "GROUP BY mes " +
+                        "ORDER BY mes ASC", nativeQuery = true)
+        List<Object[]> countDifuntosLast12Months();
+
+        // =====================================================================
+        // USUARIO
+        // =====================================================================
+        List<Difunto> findByParcela_Concesion_Usuario_Id(Integer usuarioId);
 }

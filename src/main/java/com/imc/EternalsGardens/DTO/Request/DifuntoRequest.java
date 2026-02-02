@@ -41,6 +41,7 @@ public class DifuntoRequest {
 
     private String notas;
     private String fotoPerfil;
+    private String fotoUrl;
     private String biografiaDigital;
     private Integer parcelaId;
 }

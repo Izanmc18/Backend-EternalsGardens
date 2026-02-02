@@ -33,10 +33,12 @@ public class ParcelaServiceImpl implements IParcelaService {
     public ParcelaResponse crearParcela(ParcelaRequest request) {
         // 1. Buscar dependencias
         Zona zona = zonaRepository.findById(request.getZonaId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Zona no encontrada con ID: " + request.getZonaId()));
+                .orElseThrow(
+                        () -> new RecursoNoEncontradoException("Zona no encontrada con ID: " + request.getZonaId()));
 
         TipoZona tipoZona = tipoZonaRepository.findById(request.getTipoZonaId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de Zona no encontrado con ID: " + request.getTipoZonaId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Tipo de Zona no encontrado con ID: " + request.getTipoZonaId()));
 
         // 2. Generar Identificador Único (Si no viene en el request)
         // Formato: Z{idZona}-F{Fila}-C{Columna} (Ej: Z1-F5-C2)
@@ -111,5 +113,11 @@ public class ParcelaServiceImpl implements IParcelaService {
         }
         // Validar si tiene difuntos o concesiones activas antes de borrar
         parcelaRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParcelaResponse> obtenerPorUsuario(Integer usuarioId) {
+        return parcelaMapper.toResponseList(parcelaRepository.findByConcesion_Usuario_Id(usuarioId));
     }
 }

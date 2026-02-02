@@ -55,8 +55,10 @@ public class AuthService {
 
                 return AuthResponse.builder()
                                 .token(token)
+                                .id(usuario.getId())
                                 .nombreUsuario(usuario.getNombre())
                                 .rol(usuario.getRol().getNombre())
+                                .fotoUrl(usuario.getFotoUrl())
                                 .build();
         }
 
@@ -84,8 +86,10 @@ public class AuthService {
 
                 return AuthResponse.builder()
                                 .token(token)
+                                .id(usuario.getId())
                                 .nombreUsuario(usuario.getNombre())
                                 .rol(usuario.getRol().getNombre())
+                                .fotoUrl(usuario.getFotoUrl())
                                 .build();
         }
 }

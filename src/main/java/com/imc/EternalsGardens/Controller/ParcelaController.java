@@ -18,10 +18,19 @@ import java.util.List;
 public class ParcelaController {
 
     private final IParcelaService parcelaService;
+    private final com.imc.EternalsGardens.Service.Interfaces.IUsuarioService usuarioService;
 
     @GetMapping
     public ResponseEntity<List<ParcelaResponse>> obtenerTodas() {
         return ResponseEntity.ok(parcelaService.obtenerTodas());
+    }
+
+    @GetMapping("/mis-parcelas")
+    @PreAuthorize("hasRole('CIUDADANO')")
+    public ResponseEntity<List<ParcelaResponse>> obtenerMisParcelas(java.security.Principal principal) {
+        String email = principal.getName();
+        var usuario = usuarioService.buscarPorEmail(email);
+        return ResponseEntity.ok(parcelaService.obtenerPorUsuario(usuario.getId()));
     }
 
     @GetMapping("/zona/{zonaId}")
