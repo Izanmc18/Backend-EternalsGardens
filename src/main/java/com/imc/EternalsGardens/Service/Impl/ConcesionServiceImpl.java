@@ -44,11 +44,13 @@ public class ConcesionServiceImpl implements IConcesionService {
         for (Parcela p : parcelas) {
             // Validar que estén libres
             if (!EstadoParcelaEnum.LIBRE.name().equals(p.getEstado())) {
-                throw new ReglaNegocioException("La parcela " + p.getNumeroIdentificadorUnico() + " no está disponible.");
+                throw new ReglaNegocioException(
+                        "La parcela " + p.getNumeroIdentificadorUnico() + " no está disponible.");
             }
             // Validar que pertenezcan al cementerio correcto
             if (!p.getZona().getCementerio().getId().equals(cementerio.getId())) {
-                throw new ReglaNegocioException("La parcela " + p.getNumeroIdentificadorUnico() + " no pertenece al cementerio seleccionado.");
+                throw new ReglaNegocioException(
+                        "La parcela " + p.getNumeroIdentificadorUnico() + " no pertenece al cementerio seleccionado.");
             }
         }
 
@@ -103,5 +105,77 @@ public class ConcesionServiceImpl implements IConcesionService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Concesión no encontrada ID: " + id));
         concesion.setEstado(nuevoEstado);
         concesionRepository.save(concesion);
+    }
+
+    @Override
+    @Transactional
+    public ConcesionResponse comprarParcela(Integer usuarioId, Integer parcelaId) {
+        // 1. Buscar Usuario
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
+
+        // 2. Buscar Parcela Inicial
+        Parcela parcelaInicial = parcelaRepository.findById(parcelaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Parcela no encontrada"));
+
+        // 3. Determinar si es Panteón y qué parcelas comprar
+        boolean esPanteon = parcelaInicial.getZona().getTipoZona().getNombre().toUpperCase().contains("PANTEON");
+        List<Parcela> parcelasAComprar;
+
+        if (esPanteon) {
+            // Si es panteón, se adquieren TODAS las parcelas de esa zona (el panteón
+            // completo)
+            parcelasAComprar = parcelaRepository.findByZonaId(parcelaInicial.getZona().getId());
+        } else {
+            // Si es un nicho/parcela normal, solo esa
+            parcelasAComprar = List.of(parcelaInicial);
+        }
+
+        // 4. Validar disponibilidad de TODAS las parcelas implicada
+        for (Parcela p : parcelasAComprar) {
+            if (!EstadoParcelaEnum.LIBRE.name().equals(p.getEstado())) {
+                throw new ReglaNegocioException(esPanteon
+                        ? "El panteón no está disponible completo (algunas partes están ocupadas)."
+                        : "La parcela seleccionada ya no está disponible.");
+            }
+        }
+
+        // 5. Crear Concesión Única
+        Concesion concesion = new Concesion();
+        concesion.setUsuario(usuario);
+        // Usamos el cementerio de la primera parcela (todas son del mismo)
+        concesion.setCementerio(parcelaInicial.getZona().getCementerio());
+        concesion.setFechaInicio(java.time.LocalDate.now());
+        concesion.setFechaFin(java.time.LocalDate.now().plusYears(50)); // Default 50 years
+        concesion.setPeriodoAnios(50);
+
+        // Calcular precio: (Base x Número de parcelas) o Fijo?
+        // Por ahora mantenemos lógica simple multiplicando el base por el número de
+        // unidades para ser justos,
+        // o lo dejamos fijo si el precio es 'por concesión'.
+        // Asumiremos precio base * cantidad para escalar el coste.
+        java.math.BigDecimal precioBase = new java.math.BigDecimal("1500.00");
+        java.math.BigDecimal precioFinal = precioBase.multiply(new java.math.BigDecimal(parcelasAComprar.size()));
+
+        concesion.setPrecioPeriodo(precioFinal);
+        concesion.setPrecioMantenimientoAnual(
+                new java.math.BigDecimal("50.00").multiply(new java.math.BigDecimal(parcelasAComprar.size())));
+
+        concesion.setEstado(EstadoConcesionEnum.ACTIVA.name());
+        concesion.setTipoAlta("COMPRA_ONLINE");
+
+        Concesion concesionGuardada = concesionRepository.save(concesion);
+
+        // 6. Actualizar TODAS las parcelas
+        for (Parcela p : parcelasAComprar) {
+            p.setConcesion(concesionGuardada);
+            p.setEstado(EstadoParcelaEnum.RESERVADA.name());
+            parcelaRepository.save(p);
+        }
+
+        // 7. Vincular lista para retorno correcto
+        concesionGuardada.setParcelas(parcelasAComprar);
+
+        return concesionMapper.toResponse(concesionGuardada);
     }
 }

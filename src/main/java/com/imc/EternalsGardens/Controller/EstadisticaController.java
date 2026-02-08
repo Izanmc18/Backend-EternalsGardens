@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/estadisticas")
@@ -42,21 +43,54 @@ public class EstadisticaController {
         stats.setParcelasLibres(totalParcelas - parcelasOcupadas);
         stats.setDifuntosTotal(difuntoRepository.count());
 
-
         if (totalParcelas > 0) {
             double porcentaje = ((double) parcelasOcupadas / totalParcelas) * 100;
             stats.setOcupacionPorcentaje(Math.round(porcentaje * 100.0) / 100.0);
         }
 
-        // Mock de exhumaciones pendientes (o puedes hacer un count en el repo filtrando por estado)
+        // Mock de exhumaciones pendientes (o puedes hacer un count en el repo filtrando
+        // por estado)
         stats.setExhumacionesPendientes(exhumacionRepository.count()); // Refinar con filtro "PENDIENTE"
 
-        // Datos para gráfico de tipos
-        Map<String, Long> porTipo = new HashMap<>();
-        // Aquí podrías hacer una consulta GROUP BY en el repositorio para ser más eficiente
-        // porTipo.put("Nicho", 150L);
-        // porTipo.put("Panteón", 20L);
-        stats.setParcelasPorTipo(porTipo);
+        // Nuevas Estadísticas
+        // 1. Difuntos por mes (Últimos 12 meses)
+        Map<String, Long> difuntosPorMes = new java.util.LinkedHashMap<>(); // LinkedHashMap para mantener orden
+        List<Object[]> difuntosResults = difuntoRepository.countDifuntosLast12Months();
+        for (Object[] row : difuntosResults) {
+            String mes = (String) row[0];
+            Number cantidad = (Number) row[1];
+            difuntosPorMes.put(mes, cantidad.longValue());
+        }
+        stats.setDifuntosPorMes(difuntosPorMes);
+
+        // 2. Difuntos por Sexo
+        Map<String, Long> difuntosPorSexo = new HashMap<>();
+        List<Object[]> sexoResults = difuntoRepository.countDifuntosBySexo();
+        for (Object[] row : sexoResults) {
+            String sexo = (String) row[0];
+            Number cantidad = (Number) row[1];
+            if (sexo == null)
+                sexo = "O"; // Handle nulls as Other
+            difuntosPorSexo.put(sexo, cantidad.longValue());
+        }
+        stats.setDifuntosPorSexo(difuntosPorSexo);
+
+        // 3. Ocupación por Cementerio
+        Map<String, Double> ocupacionPorCementerio = new java.util.HashMap<>();
+        List<Object[]> cementerioResults = parcelaRepository.countTotalAndOccupiedByCementerio();
+        for (Object[] row : cementerioResults) {
+            String nombre = (String) row[0];
+            Number total = (Number) row[1];
+            Number ocupadas = (Number) row[2];
+
+            if (total.longValue() > 0) {
+                double porcentaje = (ocupadas.doubleValue() / total.doubleValue()) * 100;
+                ocupacionPorCementerio.put(nombre, Math.round(porcentaje * 100.0) / 100.0);
+            } else {
+                ocupacionPorCementerio.put(nombre, 0.0);
+            }
+        }
+        stats.setOcupacionPorCementerio(ocupacionPorCementerio);
 
         return ResponseEntity.ok(stats);
     }

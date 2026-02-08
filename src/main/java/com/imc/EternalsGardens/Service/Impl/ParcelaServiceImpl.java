@@ -33,10 +33,12 @@ public class ParcelaServiceImpl implements IParcelaService {
     public ParcelaResponse crearParcela(ParcelaRequest request) {
         // 1. Buscar dependencias
         Zona zona = zonaRepository.findById(request.getZonaId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Zona no encontrada con ID: " + request.getZonaId()));
+                .orElseThrow(
+                        () -> new RecursoNoEncontradoException("Zona no encontrada con ID: " + request.getZonaId()));
 
         TipoZona tipoZona = tipoZonaRepository.findById(request.getTipoZonaId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de Zona no encontrado con ID: " + request.getTipoZonaId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Tipo de Zona no encontrado con ID: " + request.getTipoZonaId()));
 
         // 2. Generar Identificador Único (Si no viene en el request)
         // Formato: Z{idZona}-F{Fila}-C{Columna} (Ej: Z1-F5-C2)
@@ -111,5 +113,45 @@ public class ParcelaServiceImpl implements IParcelaService {
         }
         // Validar si tiene difuntos o concesiones activas antes de borrar
         parcelaRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParcelaResponse> obtenerPorUsuario(Integer usuarioId) {
+        return parcelaMapper.toResponseList(parcelaRepository.findByConcesion_Usuario_Id(usuarioId));
+    }
+
+    @Override
+    @Transactional
+    public void generarParcelasPorZona(Integer zonaId) {
+        Zona zona = zonaRepository.findById(zonaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Zona no encontrada con ID: " + zonaId));
+
+        int filas = zona.getFilas();
+        int cols = zona.getColumnas();
+
+        // Default TipoZona (Using first available or default to null if handled, better
+        // to fetch one)
+        // Assumption: There is a valid TipoZona associated with the Zona or we pick
+        // one.
+        // For simplicity, we use the Zona's type if available, otherwise we need logic.
+        // Looking at Entity Zona, does it have TipoZona? Yes.
+        TipoZona tipoZona = zona.getTipoZona(); // May need to fetch if lazy loading issues, but usually fine.
+
+        for (int f = 1; f <= filas; f++) {
+            for (int c = 1; c <= cols; c++) {
+                String codigoUnico = "Z" + zona.getId() + "-F" + f + "-C" + c;
+                if (!parcelaRepository.existsByNumeroIdentificadorUnico(codigoUnico)) {
+                    Parcela p = new Parcela();
+                    p.setZona(zona);
+                    p.setTipoZona(tipoZona);
+                    p.setNumeroFila(f);
+                    p.setNumeroColumna(c);
+                    p.setNumeroIdentificadorUnico(codigoUnico);
+                    p.setEstado(EstadoParcelaEnum.LIBRE.name());
+                    parcelaRepository.save(p);
+                }
+            }
+        }
     }
 }

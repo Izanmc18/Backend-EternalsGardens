@@ -35,6 +35,14 @@ public class DifuntoMapper {
                     difunto.getParcela().getNumeroColumna(),
                     difunto.getParcela().getNumeroIdentificadorUnico());
             response.setParcelaUbicacion(ubicacion);
+            response.setParcelaId(difunto.getParcela().getId());
+
+            if (difunto.getParcela().getZona() != null) {
+                response.setZonaId(difunto.getParcela().getZona().getId());
+                if (difunto.getParcela().getZona().getCementerio() != null) {
+                    response.setCementerioId(difunto.getParcela().getZona().getCementerio().getId());
+                }
+            }
         }
 
         return response;

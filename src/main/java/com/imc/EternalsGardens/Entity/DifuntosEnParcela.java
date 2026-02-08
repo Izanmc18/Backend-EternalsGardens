@@ -26,7 +26,7 @@ public class DifuntosEnParcela {
     private Parcela parcela;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "concesion_id", nullable = false)
+    @JoinColumn(name = "concesion_id", nullable = true)
     private Concesion concesion;
 
     @Column(nullable = false)

@@ -2,11 +2,13 @@ package com.imc.EternalsGardens.Service.Impl;
 
 import com.imc.EternalsGardens.DTO.Request.UsuarioRequest;
 import com.imc.EternalsGardens.DTO.Response.UsuarioResponse;
+import com.imc.EternalsGardens.Entity.Cementerio;
 import com.imc.EternalsGardens.Entity.Rol;
 import com.imc.EternalsGardens.Entity.Usuario;
 import com.imc.EternalsGardens.Exception.RecursoNoEncontradoException;
 import com.imc.EternalsGardens.Exception.ReglaNegocioException;
 import com.imc.EternalsGardens.Mapper.UsuarioMapper;
+import com.imc.EternalsGardens.Repository.CementerioRepository;
 import com.imc.EternalsGardens.Repository.RolRepository;
 import com.imc.EternalsGardens.Repository.UsuarioRepository;
 import com.imc.EternalsGardens.Service.Interfaces.IUsuarioService;
@@ -23,12 +25,21 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final CementerioRepository cementerioRepository;
     private final UsuarioMapper usuarioMapper;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
-    public UsuarioResponse crearUsuario(UsuarioRequest request) {
+    public UsuarioResponse crearUsuario(UsuarioRequest request, org.springframework.web.multipart.MultipartFile foto) {
+        // Validaciones manuales de contraseña
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new ReglaNegocioException("La contraseña es obligatoria");
+        }
+        if (request.getPassword().length() < 8) {
+            throw new ReglaNegocioException("La contraseña debe tener al menos 8 caracteres");
+        }
+
         if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ReglaNegocioException("El email " + request.getEmail() + " ya está en uso.");
         }
@@ -46,15 +57,48 @@ public class UsuarioServiceImpl implements IUsuarioService {
         usuario.setDni(request.getDni());
         usuario.setTelefono(request.getTelefono());
         usuario.setFechaNacimiento(request.getFechaNacimiento());
-        usuario.setDireccion("Sin dirección"); // Default or add to Request
+        usuario.setDireccion("Sin dirección");
         usuario.setCiudad("Sin ciudad");
         usuario.setCodigoPostal("00000");
         usuario.setPais("España");
 
+        if (rol.getNombre().equals("OPERADOR_CEMENTERIO")) {
+            if (request.getCementerioId() == null) {
+                throw new ReglaNegocioException("Un Operador de Cementerio debe tener un cementerio asignado.");
+            }
+            Cementerio cementerio = cementerioRepository.findById(request.getCementerioId())
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                            "Cementerio no encontrado con ID: " + request.getCementerioId()));
+            usuario.setCementerio(cementerio);
+        } else {
+            usuario.setCementerio(null);
+        }
+
+        // Handle File Upload
+        if (foto != null && !foto.isEmpty()) {
+            try {
+                String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
+                String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
+                java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+
+                if (!java.nio.file.Files.exists(uploadPath)) {
+                    java.nio.file.Files.createDirectories(uploadPath);
+                }
+
+                java.nio.file.Path filePath = uploadPath.resolve(fileName);
+                java.nio.file.Files.copy(foto.getInputStream(), filePath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                usuario.setFotoUrl("/assets/images/fotosperfil/" + fileName);
+            } catch (Exception e) {
+                throw new ReglaNegocioException("Error al guardar la foto de perfil: " + e.getMessage());
+            }
+        }
+
         usuario.setContraseña(passwordEncoder.encode(request.getPassword()));
         usuario.setRol(rol);
         usuario.setActivo(request.getActivo() != null ? request.getActivo() : true);
-        usuario.setTipoUsuario(rol.getNombre()); // Legacy field
+        usuario.setTipoUsuario(rol.getNombre());
 
         Usuario guardado = usuarioRepository.save(usuario);
         return usuarioMapper.toResponse(guardado);
@@ -62,9 +106,24 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UsuarioResponse> obtenerTodos() {
-        List<Usuario> usuarios = usuarioRepository.findAll();
-        return usuarioMapper.toResponseList(usuarios);
+    public org.springframework.data.domain.Page<UsuarioResponse> obtenerTodos(
+            org.springframework.data.domain.Pageable pageable, String rol) {
+        org.springframework.data.domain.Page<Usuario> usuariosPage;
+
+        if (rol != null && !rol.isBlank()) {
+            // Assuming we want to filter by role name. Use a Specification or custom query
+            // if needed.
+            // For simplicity, we can trust the repository ensures filtering if we add a
+            // method,
+            // OR we can fetch all and filter in memory (bad for performance),
+            // OR best: add findByRolNombre to Repository.
+            // Let's use the repository method we will add next.
+            usuariosPage = usuarioRepository.findByRolNombreContainingIgnoreCase(rol, pageable);
+        } else {
+            usuariosPage = usuarioRepository.findAll(pageable);
+        }
+
+        return usuariosPage.map(usuarioMapper::toResponse);
     }
 
     @Override
@@ -77,7 +136,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Override
     @Transactional
-    public UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request) {
+    public UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request,
+            org.springframework.web.multipart.MultipartFile foto) {
+        System.out.println("DEBUG: Service actualizarUsuario. Foto: " + (foto != null ? "present" : "null"));
+
         Usuario usuarioExistente = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con ID: " + id));
 
@@ -96,13 +158,88 @@ public class UsuarioServiceImpl implements IUsuarioService {
         }
 
         if (request.getRolId() != null) {
-            Rol nuevoRol = rolRepository.findById(request.getRolId())
-                    .orElseThrow(
-                            () -> new RecursoNoEncontradoException("Rol no encontrado con ID: " + request.getRolId()));
-            usuarioExistente.setRol(nuevoRol);
+            // Seguridad: Solo ADMIN puede cambiar roles
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().getAuthentication();
+            boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+
+            if (!isAdmin) {
+                // Si no es admin y intenta cambiar rol -> Error
+                if (!request.getRolId().equals(usuarioExistente.getRol().getId())) {
+                    throw new ReglaNegocioException("No tienes permisos para cambiar tu rol.");
+                }
+                // Si es el mismo rol, ignoramos o dejamos pasar
+            } else {
+                Rol nuevoRol = rolRepository.findById(request.getRolId())
+                        .orElseThrow(
+                                () -> new RecursoNoEncontradoException(
+                                        "Rol no encontrado con ID: " + request.getRolId()));
+                usuarioExistente.setRol(nuevoRol);
+                usuarioExistente.setTipoUsuario(nuevoRol.getNombre());
+            }
         }
 
+        // Gestionar cambio de cementerio (si se envía o si el rol lo requiere)
+        if (usuarioExistente.getRol().getNombre().equals("OPERADOR_CEMENTERIO")) {
+            if (request.getCementerioId() != null) {
+                Cementerio cementerio = cementerioRepository.findById(request.getCementerioId())
+                        .orElseThrow(() -> new RecursoNoEncontradoException(
+                                "Cementerio no encontrado con ID: " + request.getCementerioId()));
+                usuarioExistente.setCementerio(cementerio);
+            } else if (usuarioExistente.getCementerio() == null) {
+                // Si es operador y no tiene cementerio, y no s envia uno nuevo -> Error
+                throw new ReglaNegocioException("Un Operador de Cementerio debe tener un cementerio asignado.");
+            }
+        } else {
+            // Si no es operador, eliminar asignación de cementerio
+            usuarioExistente.setCementerio(null);
+        }
+
+        // Lógica de actualización de contraseña (Opcional en update)
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            if (request.getPassword().length() < 8) {
+                throw new ReglaNegocioException("La contraseña debe tener al menos 8 caracteres");
+            }
+            usuarioExistente.setContraseña(passwordEncoder.encode(request.getPassword()));
+        }
+
+        // Create directory if not exists
+        // (Moved updateEntity before file logic to avoid overwrite)
         usuarioMapper.updateEntity(request, usuarioExistente);
+
+        // Handle File Upload
+        if (foto != null && !foto.isEmpty()) {
+            try {
+                String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
+
+                // Use relative path to find frontend assets
+                // CWD is eternals-gardens-back. We need to go up one level.
+                java.nio.file.Path currentPath = java.nio.file.Paths.get(".").toAbsolutePath().normalize();
+                java.nio.file.Path projectRoot = currentPath.getParent(); // c:/.../EternalsGardens
+                java.nio.file.Path uploadPath = projectRoot
+                        .resolve("eternals-gardens-front/src/assets/images/fotosperfil");
+
+                System.out.println("DEBUG: Upload Path resolved to: " + uploadPath.toString());
+
+                if (!java.nio.file.Files.exists(uploadPath)) {
+                    java.nio.file.Files.createDirectories(uploadPath);
+                    System.out.println("DEBUG: Created directory: " + uploadPath.toString());
+                }
+
+                java.nio.file.Path filePath = uploadPath.resolve(fileName);
+                java.nio.file.Files.copy(foto.getInputStream(), filePath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                System.out.println("DEBUG: File saved to: " + filePath.toString());
+                System.out.println("DEBUG: File exists after save? " + java.nio.file.Files.exists(filePath));
+
+                usuarioExistente.setFotoUrl("/assets/images/fotosperfil/" + fileName);
+            } catch (Exception e) {
+                e.printStackTrace(); // Print stack trace to console
+                throw new ReglaNegocioException("Error al guardar la foto de perfil: " + e.getMessage());
+            }
+        }
 
         Usuario usuarioGuardado = usuarioRepository.save(usuarioExistente);
 
@@ -115,8 +252,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con ID: " + id));
 
-        usuario.setActivo(false);
-        usuarioRepository.save(usuario);
+        usuarioRepository.delete(usuario);
     }
 
     @Override
@@ -124,6 +260,14 @@ public class UsuarioServiceImpl implements IUsuarioService {
     public UsuarioResponse buscarPorDni(String dni) {
         Usuario usuario = usuarioRepository.findByDni(dni)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con DNI: " + dni));
+        return usuarioMapper.toResponse(usuario);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UsuarioResponse buscarPorEmail(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con Email: " + email));
         return usuarioMapper.toResponse(usuario);
     }
 }

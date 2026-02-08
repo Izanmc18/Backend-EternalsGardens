@@ -18,10 +18,14 @@ public class DifuntoResponse {
     private LocalDate fechaDefuncion;
     private String dni;
     private String sexo;
+    private String fotoUrl;
     private String causa;
     private String notas;
     private String fotoPerfil;
     private String biografiaDigital;
     private String parcelaUbicacion;
 
+    private Integer parcelaId;
+    private Integer zonaId;
+    private Integer cementerioId;
 }

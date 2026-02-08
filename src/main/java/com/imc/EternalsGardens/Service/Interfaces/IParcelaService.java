@@ -6,9 +6,18 @@ import java.util.List;
 
 public interface IParcelaService {
     ParcelaResponse crearParcela(ParcelaRequest request);
+
     List<ParcelaResponse> obtenerTodas();
+
     List<ParcelaResponse> obtenerPorZona(Integer zonaId);
+
+    void generarParcelasPorZona(Integer zonaId);
+
     ParcelaResponse obtenerPorId(Integer id);
+
     ParcelaResponse actualizarParcela(Integer id, ParcelaRequest request);
+
     void eliminarParcela(Integer id);
+
+    List<ParcelaResponse> obtenerPorUsuario(Integer usuarioId);
 }

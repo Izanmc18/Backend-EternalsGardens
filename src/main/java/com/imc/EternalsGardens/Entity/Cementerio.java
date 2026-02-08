@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
  *
  * RELACIONES:
  * <ul>
- *   <li>responsable: Usuario que gestiona el cementerio</li>
- *   <li>zonas: Divisiones territoriales del cementerio</li>
+ * <li>responsable: Usuario que gestiona el cementerio</li>
+ * <li>zonas: Divisiones territoriales del cementerio</li>
  * </ul>
  *
  * @author Izan Martinez Castro
@@ -173,6 +173,71 @@ public class Cementerio {
      */
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean activo = true;
+
+    /**
+     * URL de la foto principal del cementerio.
+     *
+     * ANOTACIONES:
+     * - @Column(name = "foto_url"): Nombre de columna en la base de datos
+     * - columnDefinition = "TEXT": Tipo de dato TEXT para URLs largas
+     *
+     * USO: Almacenar la URL de una imagen representativa del cementerio.
+     */
+    @Column(name = "foto_url", columnDefinition = "TEXT")
+    private String fotoUrl;
+
+    /**
+     * Ancho del canvas del mapa interactivo en píxeles.
+     *
+     * ANOTACIONES:
+     * - @Column: Campo opcional
+     *
+     * VALOR POR DEFECTO: 1200 píxeles
+     * USO: Definir el tamaño del canvas de Konva.js para el mapa del cementerio
+     */
+    @Column(name = "mapa_ancho")
+    private Integer mapaAncho = 1200;
+
+    /**
+     * Alto del canvas del mapa interactivo en píxeles.
+     *
+     * ANOTACIONES:
+     * - @Column: Campo opcional
+     *
+     * VALOR POR DEFECTO: 800 píxeles
+     * USO: Definir el tamaño del canvas de Konva.js para el mapa del cementerio
+     */
+    @Column(name = "mapa_alto")
+    private Integer mapaAlto = 800;
+
+    /**
+     * Escala del mapa interactivo.
+     *
+     * ANOTACIONES:
+     * - @Column: Campo opcional
+     * - precision = 5: 5 dígitos totales
+     * - scale = 2: 2 decimales
+     *
+     * VALOR POR DEFECTO: 1.0 (sin escala)
+     * RANGO: 0.1 - 10.0
+     * USO: Permitir zoom in/out del mapa
+     */
+    @Column(name = "mapa_escala", precision = 5, scale = 2)
+    private BigDecimal mapaEscala = BigDecimal.valueOf(1.0);
+
+    /**
+     * URL de la imagen de fondo del plano del cementerio.
+     *
+     * ANOTACIONES:
+     * - @Column(name = "imagen_fondo"): Nombre de columna en la base de datos
+     * - columnDefinition = "TEXT": Tipo de dato TEXT para URLs largas
+     *
+     * USO: Mostrar un plano o imagen satelital del cementerio como fondo del canvas
+     * de Konva.js
+     * EJEMPLO: "https://storage.example.com/cementerios/plano-jaen.png"
+     */
+    @Column(name = "imagen_fondo", columnDefinition = "TEXT")
+    private String imagenFondo;
 
     /**
      * Fecha y hora de creación del cementerio.
