@@ -15,22 +15,40 @@ public class DifuntoMapper {
     private final ModelMapper modelMapper;
 
     public Difunto toEntity(DifuntoRequest request) {
-        if (request == null) return null;
-        return modelMapper.map(request, Difunto.class);
+        if (request == null)
+            return null;
+        Difunto difunto = modelMapper.map(request, Difunto.class);
+        // Ensure ID is null for new creations to avoid ModelMapper mapping 'parcelaId'
+        // -> 'id'
+        difunto.setId(null);
+        return difunto;
     }
 
     public DifuntoResponse toResponse(Difunto difunto) {
-        if (difunto == null) return null;
-        return modelMapper.map(difunto, DifuntoResponse.class);
+        if (difunto == null)
+            return null;
+        DifuntoResponse response = modelMapper.map(difunto, DifuntoResponse.class);
+
+        if (difunto.getParcela() != null) {
+            String ubicacion = String.format("Fila %d - Col %d (%s)",
+                    difunto.getParcela().getNumeroFila(),
+                    difunto.getParcela().getNumeroColumna(),
+                    difunto.getParcela().getNumeroIdentificadorUnico());
+            response.setParcelaUbicacion(ubicacion);
+        }
+
+        return response;
     }
 
     public void updateEntity(DifuntoRequest request, Difunto entity) {
-        if (request == null || entity == null) return;
+        if (request == null || entity == null)
+            return;
         modelMapper.map(request, entity);
     }
 
     public List<DifuntoResponse> toResponseList(List<Difunto> difuntos) {
-        if (difuntos == null) return List.of();
+        if (difuntos == null)
+            return List.of();
         return difuntos.stream().map(this::toResponse).toList();
     }
 }

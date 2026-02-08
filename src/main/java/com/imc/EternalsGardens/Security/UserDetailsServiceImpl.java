@@ -23,8 +23,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        System.out.println(">>> [DEBUG] Intentando cargar usuario: " + email);
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+                .orElseThrow(() -> {
+                    System.out.println(">>> [DEBUG] Usuario NO encontrado: " + email);
+                    return new UsernameNotFoundException("Usuario no encontrado con email: " + email);
+                });
+
+        System.out.println(
+                ">>> [DEBUG] Usuario encontrado: " + usuario.getEmail() + " | Rol: " + usuario.getRol().getNombre());
+        System.out.println(">>> [DEBUG] Password en BD: " + usuario.getContraseña());
 
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getNombre());
 
@@ -35,7 +43,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 true,
                 true,
                 true,
-                Collections.singletonList(authority)
-        );
+                Collections.singletonList(authority));
     }
 }
