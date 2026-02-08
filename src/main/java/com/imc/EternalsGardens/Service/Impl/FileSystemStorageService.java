@@ -18,10 +18,9 @@ import java.util.UUID;
 @Service
 public class FileSystemStorageService implements IStorageService {
 
-    // HARDCODED PATH TO FRONTEND ASSETS for local development convenience
-    // In production, this should be an external volume or S3
+    // Base path pointing to Frontend Assets
     private final Path rootLocation = Paths
-            .get("c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil");
+            .get("c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets");
 
     @Override
     public void init() {
@@ -34,12 +33,17 @@ public class FileSystemStorageService implements IStorageService {
 
     @Override
     public String store(MultipartFile file) {
+        return store(file, ""); // Default to root or common folder
+    }
+
+    @Override
+    public String store(MultipartFile file, String subFolder) {
         try {
             if (file.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
             }
 
-            // Generate unique filename to avoid collisions
+            // Generate unique filename
             String originalFilename = file.getOriginalFilename();
             String extension = "";
             if (originalFilename != null && originalFilename.contains(".")) {
@@ -47,11 +51,20 @@ public class FileSystemStorageService implements IStorageService {
             }
             String newFilename = UUID.randomUUID().toString() + extension;
 
-            Path destinationFile = this.rootLocation.resolve(Paths.get(newFilename))
+            // Determine destination folder
+            Path destinationFolder = this.rootLocation;
+            if (subFolder != null && !subFolder.trim().isEmpty()) {
+                destinationFolder = this.rootLocation.resolve(subFolder);
+                if (!Files.exists(destinationFolder)) {
+                    Files.createDirectories(destinationFolder);
+                }
+            }
+
+            Path destinationFile = destinationFolder.resolve(Paths.get(newFilename))
                     .normalize().toAbsolutePath();
 
-            // Security check: ensure we are writing within the target directory
-            if (!destinationFile.getParent().equals(this.rootLocation.toAbsolutePath())) {
+            // Security check
+            if (!destinationFile.startsWith(this.rootLocation.toAbsolutePath())) {
                 throw new RuntimeException("Cannot store file outside current directory.");
             }
 
@@ -59,8 +72,10 @@ public class FileSystemStorageService implements IStorageService {
                 Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // Return full URL for backend serving
-            return "http://localhost:8080/images/" + newFilename;
+            // Return absolute backend URL (avoids Angular dev-server race conditions)
+            String folderPath = (subFolder != null && !subFolder.isEmpty()) ? subFolder + "/" : "";
+            // Changed from /images/ to /assets/ to match new MvcConfig and root location
+            return "http://localhost:8080/assets/" + folderPath.replace("\\", "/") + newFilename;
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file.", e);
         }

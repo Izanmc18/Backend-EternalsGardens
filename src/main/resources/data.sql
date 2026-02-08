@@ -6,10 +6,9 @@ INSERT IGNORE INTO rol (id, nombre, descripcion) VALUES
 
 -- 2. Tipos de Zona (Schema: id, nombre, descripcion)
 INSERT IGNORE INTO tipo_zona (id, nombre, descripcion) VALUES
-(1, 'NICHO', 'Espacio vertical en pared para ataúd'),
-(2, 'PARCELA', 'Terreno en suelo para enterramiento'),
-(3, 'COLUMBARIO', 'Nicho pequeño para urnas cinerarias'),
-(4, 'PANTEON', 'Construcción familiar exclusiva');
+(1, 'NICHOS', 'Estructura vertical de enterramiento'),
+(2, 'FOSA', 'Enterramiento en suelo'),
+(3, 'PANTEON', 'Construcción familiar exclusiva');
 
 -- 3. Usuarios (Necesarios para responsable_id si se usa)
 -- Simple usuario admin para pruebas
@@ -29,9 +28,9 @@ INSERT IGNORE INTO cementerio (id, nombre, municipio, provincia, codigo_postal, 
 -- Schema: cementerio_id, tipo_zona_id, nombre, filas, columnas, capacidad_total, activa, fecha_creacion
 INSERT IGNORE INTO zona (id, cementerio_id, tipo_zona_id, nombre, filas, columnas, capacidad_total, activa, fecha_creacion) VALUES
 (11, 11, 1, 'Patio de San António', 5, 20, 100, true, NOW()), -- Nichos en Sevilla
-(12, 11, 2, 'Jardín de los Olivos', 10, 10, 100, true, NOW()), -- Parcelas en Sevilla
+(12, 11, 2, 'Jardín de los Olivos', 10, 10, 100, true, NOW()), -- Fosas en Sevilla
 (13, 12, 1, 'Galería Principal', 4, 25, 100, true, NOW()), -- Nichos en Madrid
-(14, 12, 4, 'Zona Panteones Históricos', 5, 5, 25, true, NOW()); -- Panteones en Madrid
+(14, 12, 3, 'Zona Panteones Históricos', 5, 5, 25, true, NOW()); -- Panteones en Madrid
 
 -- 6. Parcelas (Linked to Zona 11 - Patio San Antonio)
 -- Schema: zona_id, tipo_zona_id, numero_fila, numero_columna, numero_identificador_unico, estado

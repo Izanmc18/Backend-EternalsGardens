@@ -207,4 +207,30 @@ public class CementerioResponse {
 
         @Schema(description = "Lista de operadores asignados a este cementerio")
         private List<OperadorResponse> operadores;
+
+        // ========================================================================
+        // CAMPOS PARA KONVA.JS - CONFIGURACIÓN DEL MAPA INTERACTIVO
+        // ========================================================================
+
+        @Schema(description = "Ancho del canvas del mapa en píxeles", example = "1200")
+        private Integer mapaAncho;
+
+        @Schema(description = "Alto del canvas del mapa en píxeles", example = "800")
+        private Integer mapaAlto;
+
+        @Schema(description = "Escala del mapa", example = "1.0")
+        private BigDecimal mapaEscala;
+
+        @Schema(description = "URL de la imagen de fondo del plano del cementerio", example = "https://storage.example.com/plano.png")
+        private String imagenFondo;
+
+        // ========================================================================
+        // CAMPOS PARA CAPACIDAD Y OCUPACIÓN
+        // ========================================================================
+
+        @Schema(description = "Capacidad total de parcelas del cementerio", example = "500")
+        private Integer capacidadTotal;
+
+        @Schema(description = "Número de parcelas ocupadas o reservadas", example = "250")
+        private Integer ocupacionActual;
 }

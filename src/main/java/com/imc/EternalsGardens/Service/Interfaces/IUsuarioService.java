@@ -11,9 +11,10 @@ public interface IUsuarioService {
 
     UsuarioResponse obtenerPorId(Integer id);
 
-    UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request);
+    UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request,
+            org.springframework.web.multipart.MultipartFile foto);
 
-    UsuarioResponse crearUsuario(UsuarioRequest request);
+    UsuarioResponse crearUsuario(UsuarioRequest request, org.springframework.web.multipart.MultipartFile foto);
 
     void eliminarUsuario(Integer id);
 

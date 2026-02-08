@@ -63,4 +63,11 @@ public class ParcelaController {
         parcelaService.eliminarParcela(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/generar/{zonaId}")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")
+    public ResponseEntity<Void> generarParcelas(@PathVariable Integer zonaId) {
+        parcelaService.generarParcelasPorZona(zonaId);
+        return ResponseEntity.ok().build();
+    }
 }

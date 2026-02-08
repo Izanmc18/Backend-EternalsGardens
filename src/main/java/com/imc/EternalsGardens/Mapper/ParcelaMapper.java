@@ -13,6 +13,7 @@ import java.util.List;
 public class ParcelaMapper {
 
     private final ModelMapper modelMapper;
+    private final DifuntosEnParcelaMapper difuntosEnParcelaMapper;
 
     public Parcela toEntity(ParcelaRequest request) {
         if (request == null)
@@ -23,6 +24,12 @@ public class ParcelaMapper {
         parcela.setNumeroColumna(request.getNumeroColumna());
         parcela.setNumeroIdentificadorUnico(request.getNumeroIdentificadorUnico());
         parcela.setEstado(request.getEstado());
+
+        // Campos Visuales Konva.js
+        parcela.setPosicionVisualX(request.getPosicionVisualX());
+        parcela.setPosicionVisualY(request.getPosicionVisualY());
+        parcela.setAnchoVisual(request.getAnchoVisual());
+        parcela.setAltoVisual(request.getAltoVisual());
 
         // Relaciones (zona, tipoZona, concesion) se gestionan en el Servicio
         return parcela;
@@ -54,6 +61,28 @@ public class ParcelaMapper {
             response.setConcesionId(parcela.getConcesion().getId());
         }
 
+        // Mapear difuntos si existen
+        if (parcela.getDifuntosEnParcela() != null && !parcela.getDifuntosEnParcela().isEmpty()) {
+            response.setDifuntos(difuntosEnParcelaMapper.toResponseList(parcela.getDifuntosEnParcela()));
+        } else if (parcela.getDifuntosDirectos() != null && !parcela.getDifuntosDirectos().isEmpty()) {
+            // Fallback: Si no hay registro histórico, miramos la relación directa
+            List<com.imc.EternalsGardens.DTO.Response.DifuntosEnParcelaResponse> fallbackList = parcela
+                    .getDifuntosDirectos().stream()
+                    .map(d -> com.imc.EternalsGardens.DTO.Response.DifuntosEnParcelaResponse.builder()
+                            .id(null) // No hay registro DEP
+                            .difuntoId(d.getId())
+                            .difuntoNombreCompleto(d.getNombre() + " " + d.getApellidos())
+                            .difuntoDni(d.getDni())
+                            .fechaDefuncion(d.getFechaDefuncion())
+                            .parcelaId(parcela.getId())
+                            .parcelaIdentificador(parcela.getNumeroIdentificadorUnico())
+                            .sexo(d.getSexo())
+                            .causa(d.getCausa())
+                            .build())
+                    .toList();
+            response.setDifuntos(fallbackList);
+        }
+
         return response;
     }
 
@@ -69,6 +98,16 @@ public class ParcelaMapper {
             entity.setNumeroIdentificadorUnico(request.getNumeroIdentificadorUnico());
         if (request.getEstado() != null)
             entity.setEstado(request.getEstado());
+
+        // Campos Visuales Konva.js
+        if (request.getPosicionVisualX() != null)
+            entity.setPosicionVisualX(request.getPosicionVisualX());
+        if (request.getPosicionVisualY() != null)
+            entity.setPosicionVisualY(request.getPosicionVisualY());
+        if (request.getAnchoVisual() != null)
+            entity.setAnchoVisual(request.getAnchoVisual());
+        if (request.getAltoVisual() != null)
+            entity.setAltoVisual(request.getAltoVisual());
 
         // Relaciones se actualizan en el Servicio si es necesario
     }

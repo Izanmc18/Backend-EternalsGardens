@@ -10,6 +10,8 @@ public interface IStorageService {
 
     String store(MultipartFile file);
 
+    String store(MultipartFile file, String subFolder);
+
     Path load(String filename);
 
     Resource loadAsResource(String filename);

@@ -20,13 +20,22 @@ public class DifuntoServiceImpl implements IDifuntoService {
 
     private final DifuntoRepository difuntoRepository;
     private final com.imc.EternalsGardens.Repository.ParcelaRepository parcelaRepository;
+    private final com.imc.EternalsGardens.Repository.DifuntosEnParcelaRepository difuntosEnParcelaRepository;
     private final DifuntoMapper difuntoMapper;
+    private final com.imc.EternalsGardens.Service.Interfaces.IStorageService storageService;
 
     @Override
     @Transactional
-    public DifuntoResponse crearDifunto(DifuntoRequest request) {
+    public DifuntoResponse crearDifunto(DifuntoRequest request, org.springframework.web.multipart.MultipartFile file) {
         System.out.println("DEBUG: Inicio crearDifunto");
         try {
+            // 0. Handle File Upload
+            if (file != null && !file.isEmpty()) {
+                storageService.init(); // Ensure dir exists
+                String url = storageService.store(file, "difuntos");
+                request.setFotoUrl(url);
+            }
+
             String normalizedDni = request.getDni().trim().toUpperCase();
             System.out.println("DEBUG: DNI normalizado: " + normalizedDni);
 
@@ -51,7 +60,8 @@ public class DifuntoServiceImpl implements IDifuntoService {
                                 "Parcela no encontrada ID: " + request.getParcelaId()));
 
                 System.out.println("DEBUG: Parcela encontrada. Estado: " + parcela.getEstado());
-                if (!"LIBRE".equalsIgnoreCase(parcela.getEstado())) {
+                if (!"LIBRE".equalsIgnoreCase(parcela.getEstado())
+                        && !"RESERVADA".equalsIgnoreCase(parcela.getEstado())) {
                     throw new com.imc.EternalsGardens.Exception.ReglaNegocioException(
                             "La parcela seleccionada no está disponible (Estado: " + parcela.getEstado() + ")");
                 }
@@ -59,12 +69,31 @@ public class DifuntoServiceImpl implements IDifuntoService {
                 parcela.setEstado("OCUPADA");
                 parcelaRepository.save(parcela);
                 difunto.setParcela(parcela);
+
                 System.out.println("DEBUG: Parcela asignada y actualizada.");
             }
 
             System.out.println("DEBUG: Guardando difunto en BD...");
             Difunto guardado = difuntoRepository.save(difunto);
             System.out.println("DEBUG: Difunto guardado ID: " + guardado.getId());
+
+            // Si hay parcela asignada, crear registro en DifuntosEnParcela
+            if (guardado.getParcela() != null) {
+                com.imc.EternalsGardens.Entity.DifuntosEnParcela dep = new com.imc.EternalsGardens.Entity.DifuntosEnParcela();
+                dep.setDifunto(guardado);
+                dep.setParcela(guardado.getParcela());
+
+                // Safe handling of Concesion
+                if (guardado.getParcela().getConcesion() != null) {
+                    dep.setConcesion(guardado.getParcela().getConcesion());
+                }
+
+                dep.setFechaEnterramiento(java.time.LocalDate.now());
+                dep.setEstado("ENTERRADO");
+
+                difuntosEnParcelaRepository.save(dep); // Throws RuntimeException if fails
+                System.out.println("DEBUG: Registro Histórico DifuntosEnParcela creado.");
+            }
 
             return difuntoMapper.toResponse(guardado);
         } catch (Exception e) {
@@ -98,9 +127,17 @@ public class DifuntoServiceImpl implements IDifuntoService {
 
     @Override
     @Transactional
-    public DifuntoResponse actualizarDifunto(Integer id, DifuntoRequest request) {
+    public DifuntoResponse actualizarDifunto(Integer id, DifuntoRequest request,
+            org.springframework.web.multipart.MultipartFile file) {
         Difunto difunto = difuntoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Difunto no encontrado ID: " + id));
+
+        // Handle File Upload
+        if (file != null && !file.isEmpty()) {
+            storageService.init();
+            String url = storageService.store(file, "difuntos");
+            request.setFotoUrl(url);
+        }
 
         difuntoMapper.updateEntity(request, difunto);
         return difuntoMapper.toResponse(difuntoRepository.save(difunto));

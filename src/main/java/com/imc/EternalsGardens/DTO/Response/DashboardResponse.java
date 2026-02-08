@@ -13,5 +13,6 @@ public class DashboardResponse {
     private double ocupacionPorcentaje;
     // private Map<String, Long> parcelasPorTipo; // Deprecado
     private Map<String, Long> difuntosPorMes;
+    private Map<String, Long> difuntosPorSexo;
     private Map<String, Double> ocupacionPorCementerio;
 }

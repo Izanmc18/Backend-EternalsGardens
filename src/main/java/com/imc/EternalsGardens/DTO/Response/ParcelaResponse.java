@@ -23,4 +23,13 @@ public class ParcelaResponse {
     private String tipoZonaNombre;
     private String estado;
     private Integer concesionId;
+
+    // CAMPOS PARA KONVA.JS
+    private java.math.BigDecimal posicionVisualX;
+    private java.math.BigDecimal posicionVisualY;
+    private java.math.BigDecimal anchoVisual;
+    private java.math.BigDecimal altoVisual;
+
+    // Listado de difuntos para mostrar en el mapa (tooltip/detalle)
+    private java.util.List<DifuntosEnParcelaResponse> difuntos;
 }

@@ -52,7 +52,6 @@ public class Usuario {
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean activo = true;
 
-    // --- CAMPO RECUPERADO ---
     @Column
     private LocalDate fechaNacimiento;
 

@@ -242,6 +242,14 @@ public interface DifuntoRepository extends JpaRepository<Difunto, Integer> {
                         "ORDER BY mes ASC", nativeQuery = true)
         List<Object[]> countDifuntosLast12Months();
 
+        /**
+         * Cuenta difuntos agrupados por sexo.
+         * 
+         * @return Lista de arrays [sexo (String), cantidad (Long)]
+         */
+        @Query("SELECT d.sexo, COUNT(d) FROM Difunto d GROUP BY d.sexo")
+        List<Object[]> countDifuntosBySexo();
+
         // =====================================================================
         // USUARIO
         // =====================================================================

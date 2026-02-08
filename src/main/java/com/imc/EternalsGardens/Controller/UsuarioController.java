@@ -9,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
@@ -26,11 +24,13 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.obtenerTodos(pageable, rol));
     }
 
-    @PostMapping
+    @PostMapping(consumes = { "multipart/form-data" })
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<UsuarioResponse> crearUsuario(@Valid @RequestBody UsuarioRequest request) {
+    public ResponseEntity<UsuarioResponse> crearUsuario(
+            @Valid @ModelAttribute UsuarioRequest request,
+            @RequestParam(value = "foto", required = false) org.springframework.web.multipart.MultipartFile foto) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
-                .body(usuarioService.crearUsuario(request));
+                .body(usuarioService.crearUsuario(request, foto));
     }
 
     @GetMapping("/{id}")
@@ -45,12 +45,15 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.buscarPorDni(dni));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
+    @PreAuthorize("hasRole('ADMINISTRADOR') or @userSecurity.esElMismoUsuario(#id)")
     public ResponseEntity<UsuarioResponse> actualizarUsuario(
             @PathVariable Integer id,
-            @Valid @RequestBody UsuarioRequest request) {
-        return ResponseEntity.ok(usuarioService.actualizarUsuario(id, request));
+            @Valid @ModelAttribute UsuarioRequest request,
+            @RequestParam(value = "foto", required = false) org.springframework.web.multipart.MultipartFile foto) {
+        System.out.println("DEBUG: actualizarUsuario ID: " + id + ", Foto: "
+                + (foto != null ? foto.getOriginalFilename() : "null"));
+        return ResponseEntity.ok(usuarioService.actualizarUsuario(id, request, foto));
     }
 
     @DeleteMapping("/{id}")

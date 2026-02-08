@@ -50,23 +50,26 @@ public class DifuntoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO', 'CIUDADANO')")
     public ResponseEntity<DifuntoResponse> obtenerPorId(@PathVariable Integer id) {
         return ResponseEntity.ok(difuntoService.obtenerPorId(id));
     }
 
-    @PostMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")
-    public ResponseEntity<DifuntoResponse> crearDifunto(@Valid @RequestBody DifuntoRequest request) {
-        return new ResponseEntity<>(difuntoService.crearDifunto(request), HttpStatus.CREATED);
+    @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO', 'CIUDADANO')")
+    public ResponseEntity<DifuntoResponse> crearDifunto(
+            @RequestPart("datos") @Valid DifuntoRequest request,
+            @RequestPart(value = "file", required = false) org.springframework.web.multipart.MultipartFile file) {
+        return new ResponseEntity<>(difuntoService.crearDifunto(request, file), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")
+    @PutMapping(value = "/{id}", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO', 'CIUDADANO')")
     public ResponseEntity<DifuntoResponse> actualizarDifunto(
             @PathVariable Integer id,
-            @Valid @RequestBody DifuntoRequest request) {
-        return ResponseEntity.ok(difuntoService.actualizarDifunto(id, request));
+            @RequestPart("datos") @Valid DifuntoRequest request,
+            @RequestPart(value = "file", required = false) org.springframework.web.multipart.MultipartFile file) {
+        return ResponseEntity.ok(difuntoService.actualizarDifunto(id, request, file));
     }
 
     @DeleteMapping("/{id}")

@@ -31,7 +31,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Override
     @Transactional
-    public UsuarioResponse crearUsuario(UsuarioRequest request) {
+    public UsuarioResponse crearUsuario(UsuarioRequest request, org.springframework.web.multipart.MultipartFile foto) {
         // Validaciones manuales de contraseña
         if (request.getPassword() == null || request.getPassword().isBlank()) {
             throw new ReglaNegocioException("La contraseña es obligatoria");
@@ -72,6 +72,27 @@ public class UsuarioServiceImpl implements IUsuarioService {
             usuario.setCementerio(cementerio);
         } else {
             usuario.setCementerio(null);
+        }
+
+        // Handle File Upload
+        if (foto != null && !foto.isEmpty()) {
+            try {
+                String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
+                String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
+                java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+
+                if (!java.nio.file.Files.exists(uploadPath)) {
+                    java.nio.file.Files.createDirectories(uploadPath);
+                }
+
+                java.nio.file.Path filePath = uploadPath.resolve(fileName);
+                java.nio.file.Files.copy(foto.getInputStream(), filePath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                usuario.setFotoUrl("/assets/images/fotosperfil/" + fileName);
+            } catch (Exception e) {
+                throw new ReglaNegocioException("Error al guardar la foto de perfil: " + e.getMessage());
+            }
         }
 
         usuario.setContraseña(passwordEncoder.encode(request.getPassword()));
@@ -115,7 +136,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Override
     @Transactional
-    public UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request) {
+    public UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request,
+            org.springframework.web.multipart.MultipartFile foto) {
+        System.out.println("DEBUG: Service actualizarUsuario. Foto: " + (foto != null ? "present" : "null"));
+
         Usuario usuarioExistente = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con ID: " + id));
 
@@ -134,11 +158,26 @@ public class UsuarioServiceImpl implements IUsuarioService {
         }
 
         if (request.getRolId() != null) {
-            Rol nuevoRol = rolRepository.findById(request.getRolId())
-                    .orElseThrow(
-                            () -> new RecursoNoEncontradoException("Rol no encontrado con ID: " + request.getRolId()));
-            usuarioExistente.setRol(nuevoRol);
-            usuarioExistente.setTipoUsuario(nuevoRol.getNombre());
+            // Seguridad: Solo ADMIN puede cambiar roles
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().getAuthentication();
+            boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+
+            if (!isAdmin) {
+                // Si no es admin y intenta cambiar rol -> Error
+                if (!request.getRolId().equals(usuarioExistente.getRol().getId())) {
+                    throw new ReglaNegocioException("No tienes permisos para cambiar tu rol.");
+                }
+                // Si es el mismo rol, ignoramos o dejamos pasar
+            } else {
+                Rol nuevoRol = rolRepository.findById(request.getRolId())
+                        .orElseThrow(
+                                () -> new RecursoNoEncontradoException(
+                                        "Rol no encontrado con ID: " + request.getRolId()));
+                usuarioExistente.setRol(nuevoRol);
+                usuarioExistente.setTipoUsuario(nuevoRol.getNombre());
+            }
         }
 
         // Gestionar cambio de cementerio (si se envía o si el rol lo requiere)
@@ -165,7 +204,42 @@ public class UsuarioServiceImpl implements IUsuarioService {
             usuarioExistente.setContraseña(passwordEncoder.encode(request.getPassword()));
         }
 
+        // Create directory if not exists
+        // (Moved updateEntity before file logic to avoid overwrite)
         usuarioMapper.updateEntity(request, usuarioExistente);
+
+        // Handle File Upload
+        if (foto != null && !foto.isEmpty()) {
+            try {
+                String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
+
+                // Use relative path to find frontend assets
+                // CWD is eternals-gardens-back. We need to go up one level.
+                java.nio.file.Path currentPath = java.nio.file.Paths.get(".").toAbsolutePath().normalize();
+                java.nio.file.Path projectRoot = currentPath.getParent(); // c:/.../EternalsGardens
+                java.nio.file.Path uploadPath = projectRoot
+                        .resolve("eternals-gardens-front/src/assets/images/fotosperfil");
+
+                System.out.println("DEBUG: Upload Path resolved to: " + uploadPath.toString());
+
+                if (!java.nio.file.Files.exists(uploadPath)) {
+                    java.nio.file.Files.createDirectories(uploadPath);
+                    System.out.println("DEBUG: Created directory: " + uploadPath.toString());
+                }
+
+                java.nio.file.Path filePath = uploadPath.resolve(fileName);
+                java.nio.file.Files.copy(foto.getInputStream(), filePath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                System.out.println("DEBUG: File saved to: " + filePath.toString());
+                System.out.println("DEBUG: File exists after save? " + java.nio.file.Files.exists(filePath));
+
+                usuarioExistente.setFotoUrl("/assets/images/fotosperfil/" + fileName);
+            } catch (Exception e) {
+                e.printStackTrace(); // Print stack trace to console
+                throw new ReglaNegocioException("Error al guardar la foto de perfil: " + e.getMessage());
+            }
+        }
 
         Usuario usuarioGuardado = usuarioRepository.save(usuarioExistente);
 

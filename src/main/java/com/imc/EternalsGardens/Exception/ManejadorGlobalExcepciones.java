@@ -87,6 +87,8 @@ public class ManejadorGlobalExcepciones {
         if (ex.getCause() != null && ex.getCause().getMessage() != null
                 && ex.getCause().getMessage().toLowerCase().contains("duplicate")) {
             mensaje = "Ya existe un registro con esos datos (posiblemente email, DNI o código duplicado).";
+        } else if (ex.getRootCause() != null) {
+            mensaje += " Detalle: " + ex.getRootCause().getMessage();
         }
 
         ApiError error = new ApiError(

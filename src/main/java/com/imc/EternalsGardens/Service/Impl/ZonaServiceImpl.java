@@ -30,17 +30,27 @@ public class ZonaServiceImpl implements IZonaService {
     @Transactional
     public ZonaResponse crearZona(ZonaRequest request) {
         Cementerio cementerio = cementerioRepository.findById(request.getCementerioId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Cementerio no encontrado ID: " + request.getCementerioId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Cementerio no encontrado ID: " + request.getCementerioId()));
 
         TipoZona tipoZona = tipoZonaRepository.findById(request.getTipoZonaId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("TipoZona no encontrado ID: " + request.getTipoZonaId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "TipoZona no encontrado ID: " + request.getTipoZonaId()));
 
         Zona zona = zonaMapper.toEntity(request);
         zona.setCementerio(cementerio);
         zona.setTipoZona(tipoZona);
+        zona.setTipoZona(tipoZona);
         zona.setActiva(true);
+        // Asegurar que es una NUEVA entidad
+        zona.setId(null);
 
-        if (zona.getCapacidadTotal() == null && zona.getFilas() != null && zona.getColumnas() != null) {
+        // Prevenir NullPointerException o DataIntegrityViolation si vienen nulos
+        if (zona.getFilas() == null)
+            zona.setFilas(0);
+        if (zona.getColumnas() == null)
+            zona.setColumnas(0);
+        if (zona.getCapacidadTotal() == null) {
             zona.setCapacidadTotal(zona.getFilas() * zona.getColumnas());
         }
 
@@ -56,7 +66,7 @@ public class ZonaServiceImpl implements IZonaService {
     @Override
     @Transactional(readOnly = true)
     public List<ZonaResponse> obtenerPorCementerio(Integer cementerioId) {
-        return zonaMapper.toResponseList(zonaRepository.findByCementerioId(cementerioId));
+        return zonaMapper.toResponseList(zonaRepository.findByCementerioIdAndActivaTrue(cementerioId));
     }
 
     @Override
@@ -84,6 +94,14 @@ public class ZonaServiceImpl implements IZonaService {
         if (request.getFilas() != null && request.getColumnas() != null) {
             zona.setCapacidadTotal(request.getFilas() * request.getColumnas());
         }
+
+        // Protección contra nulos tras mapeo
+        if (zona.getFilas() == null)
+            zona.setFilas(0);
+        if (zona.getColumnas() == null)
+            zona.setColumnas(0);
+        if (zona.getCapacidadTotal() == null)
+            zona.setCapacidadTotal(0);
 
         return zonaMapper.toResponse(zonaRepository.save(zona));
     }

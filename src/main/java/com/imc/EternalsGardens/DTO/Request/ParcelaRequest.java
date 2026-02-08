@@ -38,4 +38,20 @@ public class ParcelaRequest {
 
     @Schema(description = "ID de la concesión si ya está ocupada", example = "10")
     private Integer concesionId;
+
+    // ========================================================================
+    // CAMPOS PARA KONVA.JS - POSICIONES VISUALES
+    // ========================================================================
+
+    @Schema(description = "Posición X visual en la zona", example = "10.5")
+    private java.math.BigDecimal posicionVisualX;
+
+    @Schema(description = "Posición Y visual en la zona", example = "20.5")
+    private java.math.BigDecimal posicionVisualY;
+
+    @Schema(description = "Ancho visual de la parcela", example = "30")
+    private java.math.BigDecimal anchoVisual;
+
+    @Schema(description = "Alto visual de la parcela", example = "30")
+    private java.math.BigDecimal altoVisual;
 }

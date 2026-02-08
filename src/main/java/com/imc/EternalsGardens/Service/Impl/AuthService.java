@@ -15,7 +15,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 
 @Service
@@ -30,7 +35,7 @@ public class AuthService {
         private final UserDetailsServiceImpl userDetailsService;
 
         // MÉTODO DE REGISTRO
-        public AuthResponse register(UsuarioRequest request) {
+        public AuthResponse register(UsuarioRequest request, MultipartFile foto) {
 
                 Usuario usuario = new Usuario();
                 usuario.setNombre(request.getNombre());
@@ -48,7 +53,31 @@ public class AuthService {
                                 .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
                 usuario.setRol(rol);
 
-                usuarioRepository.save(usuario);
+                // Guardar foto de perfil si existe
+                if (foto != null && !foto.isEmpty()) {
+                        try {
+                                String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
+                                String uploadDir = "src/main/resources/static/assets/fotosperfil/";
+                                Path uploadPath = Paths.get(uploadDir);
+
+                                if (!Files.exists(uploadPath)) {
+                                        Files.createDirectories(uploadPath);
+                                }
+
+                                Path filePath = uploadPath.resolve(fileName);
+                                Files.copy(foto.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                                usuario.setFotoUrl("/assets/fotosperfil/" + fileName);
+                        } catch (Exception e) {
+                                throw new RuntimeException("Error al guardar la foto de perfil: " + e.getMessage());
+                        }
+                }
+
+                try {
+                        usuarioRepository.save(usuario);
+                } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                        throw new RuntimeException("Error: El email o DNI ya están registrados.");
+                }
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(usuario.getEmail());
                 String token = jwtUtils.generateToken(userDetails);

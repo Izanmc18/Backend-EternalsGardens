@@ -18,6 +18,16 @@ import java.util.List;
 public class ConcesionController {
 
     private final IConcesionService concesionService;
+    private final com.imc.EternalsGardens.Service.Interfaces.IUsuarioService usuarioService;
+
+    @PostMapping("/comprar/{parcelaId}")
+    @PreAuthorize("hasRole('CIUDADANO')")
+    public ResponseEntity<ConcesionResponse> comprarParcela(@PathVariable Integer parcelaId,
+            java.security.Principal principal) {
+        String email = principal.getName();
+        var usuario = usuarioService.buscarPorEmail(email);
+        return new ResponseEntity<>(concesionService.comprarParcela(usuario.getId(), parcelaId), HttpStatus.CREATED);
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'OPERADOR_CEMENTERIO')")

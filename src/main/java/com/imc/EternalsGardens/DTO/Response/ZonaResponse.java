@@ -26,8 +26,18 @@ public class ZonaResponse {
     private Integer columnas;
     private Integer capacidadTotal;
     private String poligonoCoordinadas;
-    private BigDecimal coordenadaX;
-    private BigDecimal coordenadaY;
+    // CAMPOS PARA KONVA.JS
+    private String formaTipo;
+    private String coordenadasJson;
+    private BigDecimal posicionX;
+    private BigDecimal posicionY;
+    private BigDecimal ancho;
+    private BigDecimal alto;
+    private BigDecimal radio;
+    private BigDecimal rotacion;
+    private String colorRelleno;
+    private String colorBorde;
+    private BigDecimal opacidad;
     private Boolean activa;
     private LocalDateTime fechaCreacion;
 }

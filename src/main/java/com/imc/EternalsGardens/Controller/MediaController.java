@@ -16,11 +16,13 @@ public class MediaController {
     private final IStorageService storageService;
 
     @PostMapping("/upload")
-    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
-        // Initialize storage (creates directory if not exists)
+    public ResponseEntity<Map<String, String>> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "folder", required = false, defaultValue = "fotosperfil") String folder) {
+        // Initialize storage
         storageService.init();
 
-        String fileUrl = storageService.store(file);
+        String fileUrl = storageService.store(file, folder);
 
         return ResponseEntity.ok(Map.of("url", fileUrl));
     }

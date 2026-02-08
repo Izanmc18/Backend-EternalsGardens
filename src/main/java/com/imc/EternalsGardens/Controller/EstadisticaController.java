@@ -63,7 +63,19 @@ public class EstadisticaController {
         }
         stats.setDifuntosPorMes(difuntosPorMes);
 
-        // 2. Ocupación por Cementerio
+        // 2. Difuntos por Sexo
+        Map<String, Long> difuntosPorSexo = new HashMap<>();
+        List<Object[]> sexoResults = difuntoRepository.countDifuntosBySexo();
+        for (Object[] row : sexoResults) {
+            String sexo = (String) row[0];
+            Number cantidad = (Number) row[1];
+            if (sexo == null)
+                sexo = "O"; // Handle nulls as Other
+            difuntosPorSexo.put(sexo, cantidad.longValue());
+        }
+        stats.setDifuntosPorSexo(difuntosPorSexo);
+
+        // 3. Ocupación por Cementerio
         Map<String, Double> ocupacionPorCementerio = new java.util.HashMap<>();
         List<Object[]> cementerioResults = parcelaRepository.countTotalAndOccupiedByCementerio();
         for (Object[] row : cementerioResults) {

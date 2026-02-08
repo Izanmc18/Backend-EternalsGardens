@@ -44,11 +44,42 @@ public class ZonaRequest {
     @Schema(description = "Coordenadas del polígono para dibujar en mapa", example = "[[-3.4, 40.1], [-3.5, 40.2]]")
     private String poligonoCoordinadas;
 
-    @Schema(description = "Coordenada X (Longitud) del centro de la zona")
-    private BigDecimal coordenadaX;
+    // ========================================================================
+    // CAMPOS PARA KONVA.JS - MAPAS INTERACTIVOS
+    // ========================================================================
 
-    @Schema(description = "Coordenada Y (Latitud) del centro de la zona")
-    private BigDecimal coordenadaY;
+    @Schema(description = "Tipo de forma (RECTANGLE, CIRCLE, POLYGON, PATH)", example = "RECTANGLE")
+    private String formaTipo;
+
+    @Schema(description = "JSON completo de configuración de Konva.js", example = "{\"attrs\":{...}}")
+    private String coordenadasJson;
+
+    @Schema(description = "Posición X en el canvas", example = "100.50")
+    private BigDecimal posicionX;
+
+    @Schema(description = "Posición Y en el canvas", example = "200.50")
+    private BigDecimal posicionY;
+
+    @Schema(description = "Ancho de la zona (rectángulo)", example = "300")
+    private BigDecimal ancho;
+
+    @Schema(description = "Alto de la zona (rectángulo)", example = "150")
+    private BigDecimal alto;
+
+    @Schema(description = "Radio de la zona (círculo)", example = "50")
+    private BigDecimal radio;
+
+    @Schema(description = "Rotación en grados", example = "0")
+    private BigDecimal rotacion;
+
+    @Schema(description = "Color de relleno", example = "#4CAF50")
+    private String colorRelleno;
+
+    @Schema(description = "Color de borde", example = "#2E7D32")
+    private String colorBorde;
+
+    @Schema(description = "Opacidad (0-1)", example = "0.6")
+    private BigDecimal opacidad;
 
     @Schema(description = "Si la zona está operativa", example = "true")
     private Boolean activa;

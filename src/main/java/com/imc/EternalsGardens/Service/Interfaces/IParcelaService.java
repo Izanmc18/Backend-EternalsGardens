@@ -11,6 +11,8 @@ public interface IParcelaService {
 
     List<ParcelaResponse> obtenerPorZona(Integer zonaId);
 
+    void generarParcelasPorZona(Integer zonaId);
+
     ParcelaResponse obtenerPorId(Integer id);
 
     ParcelaResponse actualizarParcela(Integer id, ParcelaRequest request);

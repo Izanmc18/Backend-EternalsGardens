@@ -196,8 +196,7 @@ public class CementerioRequest {
          * EJEMPLO: "https://ejemplo.com/fotos/cementerio-jaen.jpg"
          */
         @Size(max = 255, message = "La URL de la foto no puede exceder 255 caracteres")
-        @Pattern(regexp = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]$", message = "La URL de la foto debe tener un formato válido")
-        @Schema(description = "URL de la foto principal del cementerio (opcional)", example = "https://ejemplo.com/fotos/cementerio-jaen.jpg", maxLength = 255)
+        @Schema(description = "URL de la foto principal del cementerio (opcional)", example = "assets/images/cementerio.jpg", maxLength = 255)
         private String fotoUrl;
 
         /**
@@ -230,4 +229,37 @@ public class CementerioRequest {
         @NotNull(message = "El estado activo es obligatorio")
         @Schema(description = "Estado de activación (true=activo, false=inactivo)", example = "true", type = "boolean")
         private Boolean activo;
+
+        // ========================================================================
+        // CAMPOS PARA KONVA.JS - CONFIGURACIÓN DEL MAPA INTERACTIVO
+        // ========================================================================
+
+        /**
+         * Ancho del canvas del mapa interactivo en píxeles.
+         */
+        @Positive(message = "El ancho del mapa debe ser un número positivo")
+        @Schema(description = "Ancho del canvas del mapa en píxeles (opcional)", example = "1200", type = "integer")
+        private Integer mapaAncho;
+
+        /**
+         * Alto del canvas del mapa interactivo en píxeles.
+         */
+        @Positive(message = "El alto del mapa debe ser un número positivo")
+        @Schema(description = "Alto del canvas del mapa en píxeles (opcional)", example = "800", type = "integer")
+        private Integer mapaAlto;
+
+        /**
+         * Escala del mapa interactivo.
+         */
+        @DecimalMin(value = "0.1", message = "La escala del mapa debe estar entre 0.1 y 10.0")
+        @DecimalMax(value = "10.0", message = "La escala del mapa debe estar entre 0.1 y 10.0")
+        @Schema(description = "Escala del mapa (opcional, 1.0 = sin escala)", example = "1.0", minimum = "0.1", maximum = "10.0")
+        private BigDecimal mapaEscala;
+
+        /**
+         * URL de la imagen de fondo del plano del cementerio.
+         */
+        @Size(max = 500, message = "La URL de la imagen de fondo no puede exceder 500 caracteres")
+        @Schema(description = "URL de la imagen de fondo del plano del cementerio (opcional)", example = "https://storage.example.com/plano.png", maxLength = 500)
+        private String imagenFondo;
 }

@@ -25,4 +25,7 @@ public class DifuntoResponse {
     private String biografiaDigital;
     private String parcelaUbicacion;
 
+    private Integer parcelaId;
+    private Integer zonaId;
+    private Integer cementerioId;
 }
