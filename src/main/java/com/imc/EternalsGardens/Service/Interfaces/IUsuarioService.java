@@ -2,23 +2,24 @@ package com.imc.EternalsGardens.Service.Interfaces;
 
 import com.imc.EternalsGardens.DTO.Request.UsuarioRequest;
 import com.imc.EternalsGardens.DTO.Response.UsuarioResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface IUsuarioService {
 
-    org.springframework.data.domain.Page<UsuarioResponse> obtenerTodos(
-            org.springframework.data.domain.Pageable pageable, String rol);
+        Page<UsuarioResponse> obtenerTodos(Pageable pageable, String rol);
 
-    UsuarioResponse obtenerPorId(Integer id);
+        UsuarioResponse obtenerPorId(Integer id);
 
-    UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request,
-            org.springframework.web.multipart.MultipartFile foto);
+        UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request, MultipartFile foto);
 
-    UsuarioResponse crearUsuario(UsuarioRequest request, org.springframework.web.multipart.MultipartFile foto);
+        UsuarioResponse crearUsuario(UsuarioRequest request, MultipartFile foto);
 
-    void eliminarUsuario(Integer id);
+        void eliminarUsuario(Integer id);
 
-    UsuarioResponse buscarPorDni(String dni);
+        UsuarioResponse buscarPorDni(String dni);
 
-    UsuarioResponse buscarPorEmail(String email);
+        UsuarioResponse buscarPorEmail(String email);
 }

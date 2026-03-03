@@ -49,7 +49,7 @@ public class ManejadorGlobalExcepciones {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
-    // 4. Acceso Denegado / Falta de Permisos (403) - ¡NUEVO!
+    // 4. Acceso Denegado / Falta de Permisos (403)
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> manejarAccesoDenegado(AccessDeniedException ex, HttpServletRequest request) {
         ApiError error = new ApiError(
@@ -79,7 +79,7 @@ public class ManejadorGlobalExcepciones {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    // 6. Integridad de Datos / Duplicados (409) - ¡NUEVO!
+    // 6. Integridad de Datos / Duplicados (409)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> manejarViolacionIntegridad(DataIntegrityViolationException ex,
             HttpServletRequest request) {
@@ -98,7 +98,7 @@ public class ManejadorGlobalExcepciones {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
-    // 7. JSON Mal formado (400) - ¡NUEVO!
+    // 7. JSON Mal formado (400)
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> manejarJsonMalFormado(HttpMessageNotReadableException ex,
             HttpServletRequest request) {
@@ -115,7 +115,7 @@ public class ManejadorGlobalExcepciones {
         ex.printStackTrace();
         ApiError error = new ApiError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ha ocurrido un error interno en el servidor: " + ex.getMessage(), // LEAKING ERROR FOR DEBUGGING
+                "Ha ocurrido un error interno en el servidor: " + ex.getMessage(),
                 request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }

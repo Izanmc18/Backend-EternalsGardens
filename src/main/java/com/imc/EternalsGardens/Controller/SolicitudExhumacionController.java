@@ -21,14 +21,12 @@ import java.util.List;
 public class SolicitudExhumacionController {
 
     private final ISolicitudExhumacionService servicio;
-    // Necesitas inyectar UsuarioService o Repository para sacar el ID del email del token
 
     @PostMapping
     @Operation(summary = "Crear solicitud (Ciudadano)")
     public ResponseEntity<SolicitudExhumacionResponse> crearSolicitud(@RequestBody SolicitudExhumacionRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        // TODO: Buscar ID de usuario por email usando tu servicio de usuarios
         Integer usuarioId = 1;
 
         return ResponseEntity.ok(servicio.crearSolicitud(usuarioId, request));

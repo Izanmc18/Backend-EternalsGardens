@@ -14,7 +14,7 @@ public class ParcelaResponse {
     private Integer id;
     private Integer zonaId;
     private String zonaNombre;
-    private Integer cementerioId; // Added for completeness
+    private Integer cementerioId;
     private String cementerioNombre;
     private Integer numeroFila;
     private Integer numeroColumna;

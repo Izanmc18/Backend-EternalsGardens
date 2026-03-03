@@ -2,6 +2,8 @@ package com.imc.EternalsGardens.Service.Interfaces;
 
 import com.imc.EternalsGardens.DTO.Request.DifuntoRequest;
 import com.imc.EternalsGardens.DTO.Response.DifuntoResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,13 +20,13 @@ public interface IDifuntoService {
 
         void eliminarDifunto(Integer id);
 
-        org.springframework.data.domain.Page<DifuntoResponse> obtenerPorZona(
+        Page<DifuntoResponse> obtenerPorZona(
                         Integer zonaId,
-                        org.springframework.data.domain.Pageable pageable);
+                        Pageable pageable);
 
-        org.springframework.data.domain.Page<DifuntoResponse> obtenerPorCementerio(
+        Page<DifuntoResponse> obtenerPorCementerio(
                         Integer cementerioId,
-                        org.springframework.data.domain.Pageable pageable);
+                        Pageable pageable);
 
         List<DifuntoResponse> obtenerPorUsuario(Integer usuarioId);
 }

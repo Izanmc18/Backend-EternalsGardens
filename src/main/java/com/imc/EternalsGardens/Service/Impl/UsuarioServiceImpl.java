@@ -13,9 +13,19 @@ import com.imc.EternalsGardens.Repository.RolRepository;
 import com.imc.EternalsGardens.Repository.UsuarioRepository;
 import com.imc.EternalsGardens.Service.Interfaces.IUsuarioService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,11 +37,11 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final RolRepository rolRepository;
     private final CementerioRepository cementerioRepository;
     private final UsuarioMapper usuarioMapper;
-    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
-    public UsuarioResponse crearUsuario(UsuarioRequest request, org.springframework.web.multipart.MultipartFile foto) {
+    public UsuarioResponse crearUsuario(UsuarioRequest request, MultipartFile foto) {
         // Validaciones manuales de contraseña
         if (request.getPassword() == null || request.getPassword().isBlank()) {
             throw new ReglaNegocioException("La contraseña es obligatoria");
@@ -74,20 +84,19 @@ public class UsuarioServiceImpl implements IUsuarioService {
             usuario.setCementerio(null);
         }
 
-        // Handle File Upload
         if (foto != null && !foto.isEmpty()) {
             try {
                 String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
-                String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
-                java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
 
-                if (!java.nio.file.Files.exists(uploadPath)) {
-                    java.nio.file.Files.createDirectories(uploadPath);
+                String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
+                Path uploadPath = Paths.get(uploadDir);
+
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
                 }
 
-                java.nio.file.Path filePath = uploadPath.resolve(fileName);
-                java.nio.file.Files.copy(foto.getInputStream(), filePath,
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Path filePath = uploadPath.resolve(fileName);
+                Files.copy(foto.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
                 usuario.setFotoUrl("/assets/images/fotosperfil/" + fileName);
             } catch (Exception e) {
@@ -106,18 +115,11 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<UsuarioResponse> obtenerTodos(
-            org.springframework.data.domain.Pageable pageable, String rol) {
-        org.springframework.data.domain.Page<Usuario> usuariosPage;
+    public Page<UsuarioResponse> obtenerTodos(Pageable pageable, String rol) {
+        Page<Usuario> usuariosPage;
 
         if (rol != null && !rol.isBlank()) {
-            // Assuming we want to filter by role name. Use a Specification or custom query
-            // if needed.
-            // For simplicity, we can trust the repository ensures filtering if we add a
-            // method,
-            // OR we can fetch all and filter in memory (bad for performance),
-            // OR best: add findByRolNombre to Repository.
-            // Let's use the repository method we will add next.
+
             usuariosPage = usuarioRepository.findByRolNombreContainingIgnoreCase(rol, pageable);
         } else {
             usuariosPage = usuarioRepository.findAll(pageable);
@@ -137,7 +139,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     @Transactional
     public UsuarioResponse actualizarUsuario(Integer id, UsuarioRequest request,
-            org.springframework.web.multipart.MultipartFile foto) {
+            MultipartFile foto) {
         System.out.println("DEBUG: Service actualizarUsuario. Foto: " + (foto != null ? "present" : "null"));
 
         Usuario usuarioExistente = usuarioRepository.findById(id)
@@ -159,8 +161,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
         if (request.getRolId() != null) {
             // Seguridad: Solo ADMIN puede cambiar roles
-            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
-                    .getContext().getAuthentication();
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             boolean isAdmin = auth != null && auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
 
@@ -204,39 +205,31 @@ public class UsuarioServiceImpl implements IUsuarioService {
             usuarioExistente.setContraseña(passwordEncoder.encode(request.getPassword()));
         }
 
-        // Create directory if not exists
-        // (Moved updateEntity before file logic to avoid overwrite)
         usuarioMapper.updateEntity(request, usuarioExistente);
 
-        // Handle File Upload
         if (foto != null && !foto.isEmpty()) {
             try {
                 String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
 
-                // Use relative path to find frontend assets
-                // CWD is eternals-gardens-back. We need to go up one level.
-                java.nio.file.Path currentPath = java.nio.file.Paths.get(".").toAbsolutePath().normalize();
-                java.nio.file.Path projectRoot = currentPath.getParent(); // c:/.../EternalsGardens
-                java.nio.file.Path uploadPath = projectRoot
-                        .resolve("eternals-gardens-front/src/assets/images/fotosperfil");
+                String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
+                Path uploadPath2 = Paths.get(uploadDir);
 
-                System.out.println("DEBUG: Upload Path resolved to: " + uploadPath.toString());
+                System.out.println("DEBUG: Upload Path resolved to: " + uploadPath2.toString());
 
-                if (!java.nio.file.Files.exists(uploadPath)) {
-                    java.nio.file.Files.createDirectories(uploadPath);
-                    System.out.println("DEBUG: Created directory: " + uploadPath.toString());
+                if (!Files.exists(uploadPath2)) {
+                    Files.createDirectories(uploadPath2);
+                    System.out.println("DEBUG: Created directory: " + uploadPath2.toString());
                 }
 
-                java.nio.file.Path filePath = uploadPath.resolve(fileName);
-                java.nio.file.Files.copy(foto.getInputStream(), filePath,
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Path filePath2 = uploadPath2.resolve(fileName);
+                Files.copy(foto.getInputStream(), filePath2, StandardCopyOption.REPLACE_EXISTING);
 
-                System.out.println("DEBUG: File saved to: " + filePath.toString());
-                System.out.println("DEBUG: File exists after save? " + java.nio.file.Files.exists(filePath));
+                System.out.println("DEBUG: File saved to: " + filePath2.toString());
+                System.out.println("DEBUG: File exists after save? " + Files.exists(filePath2));
 
                 usuarioExistente.setFotoUrl("/assets/images/fotosperfil/" + fileName);
             } catch (Exception e) {
-                e.printStackTrace(); // Print stack trace to console
+                e.printStackTrace();
                 throw new ReglaNegocioException("Error al guardar la foto de perfil: " + e.getMessage());
             }
         }

@@ -8,7 +8,7 @@ import com.imc.EternalsGardens.Exception.RecursoNoEncontradoException;
 import com.imc.EternalsGardens.Mapper.CementerioMapper;
 import com.imc.EternalsGardens.Repository.CementerioRepository;
 import com.imc.EternalsGardens.Repository.UsuarioRepository;
-import com.imc.EternalsGardens.Repository.ZonaRepository; // <--- NUEVO IMPORT
+import com.imc.EternalsGardens.Repository.ZonaRepository;
 import com.imc.EternalsGardens.Service.Interfaces.ICementerioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -81,9 +81,7 @@ public class CementerioServiceImpl implements ICementerioService {
 
         CementerioResponse response = cementerioMapper.toResponse(cementerio);
 
-        // Fetch Operators
         List<Usuario> operadores = usuarioRepository.findByCementerioIdAndRolNombre(id, "OPERADOR_CEMENTERIO");
-        // Map to OperadorResponse
         List<com.imc.EternalsGardens.DTO.Response.OperadorResponse> operadorResponses = operadores.stream().map(op -> {
             com.imc.EternalsGardens.DTO.Response.OperadorResponse dto = new com.imc.EternalsGardens.DTO.Response.OperadorResponse();
             dto.setId(op.getId());

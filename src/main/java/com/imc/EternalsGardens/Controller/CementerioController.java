@@ -8,9 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/cementerios")
@@ -21,8 +21,8 @@ public class CementerioController {
 
     @GetMapping
     @PreAuthorize("permitAll()")
-    public ResponseEntity<org.springframework.data.domain.Page<CementerioResponse>> obtenerTodos(
-            org.springframework.data.domain.Pageable pageable,
+    public ResponseEntity<Page<CementerioResponse>> obtenerTodos(
+            Pageable pageable,
             @RequestParam(required = false) String provincia) {
         return ResponseEntity.ok(cementerioService.obtenerTodos(pageable, provincia));
     }

@@ -52,7 +52,7 @@ public class OperadorController {
     @Operation(summary = "Actualizar perfil propio (Operador logueado)")
     public ResponseEntity<OperadorResponse> actualizarPerfilPropio(@RequestBody OperadorRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName(); // El email viene del token
+        String email = auth.getName();
         return ResponseEntity.ok(operadorService.actualizarPerfilPropio(email, request));
     }
 
@@ -60,7 +60,8 @@ public class OperadorController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @Operation(summary = "Actualizar operador por ID (Solo Admin)")
-    public ResponseEntity<OperadorResponse> actualizarOperador(@PathVariable Integer id, @RequestBody OperadorRequest request) {
+    public ResponseEntity<OperadorResponse> actualizarOperador(@PathVariable Integer id,
+            @RequestBody OperadorRequest request) {
         return ResponseEntity.ok(operadorService.actualizarOperadorAdmin(id, request));
     }
 

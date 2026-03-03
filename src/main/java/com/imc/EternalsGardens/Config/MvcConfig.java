@@ -13,8 +13,6 @@ public class MvcConfig implements WebMvcConfigurer {
                                 .addResourceLocations(
                                                 "file:///c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/");
 
-                // Mantener compatibilidad con images/ existentes si es necesario, mapeando a
-                // assets/images/
                 registry.addResourceHandler("/images/**")
                                 .addResourceLocations(
                                                 "file:c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/");
