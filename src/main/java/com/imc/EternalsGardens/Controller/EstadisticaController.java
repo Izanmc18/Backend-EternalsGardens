@@ -50,7 +50,7 @@ public class EstadisticaController {
 
         // Mock de exhumaciones pendientes (o puedes hacer un count en el repo filtrando
         // por estado)
-        stats.setExhumacionesPendientes(exhumacionRepository.count()); // Refinar con filtro "PENDIENTE"
+        stats.setExhumacionesPendientes(exhumacionRepository.count());
 
         // Nuevas Estadísticas
         // 1. Difuntos por mes (Últimos 12 meses)
@@ -70,7 +70,7 @@ public class EstadisticaController {
             String sexo = (String) row[0];
             Number cantidad = (Number) row[1];
             if (sexo == null)
-                sexo = "O"; // Handle nulls as Other
+                sexo = "O";
             difuntosPorSexo.put(sexo, cantidad.longValue());
         }
         stats.setDifuntosPorSexo(difuntosPorSexo);

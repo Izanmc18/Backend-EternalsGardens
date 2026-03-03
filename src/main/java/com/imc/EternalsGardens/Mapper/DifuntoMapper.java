@@ -18,8 +18,6 @@ public class DifuntoMapper {
         if (request == null)
             return null;
         Difunto difunto = modelMapper.map(request, Difunto.class);
-        // Ensure ID is null for new creations to avoid ModelMapper mapping 'parcelaId'
-        // -> 'id'
         difunto.setId(null);
         return difunto;
     }

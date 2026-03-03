@@ -130,13 +130,7 @@ public class ParcelaServiceImpl implements IParcelaService {
         int filas = zona.getFilas();
         int cols = zona.getColumnas();
 
-        // Default TipoZona (Using first available or default to null if handled, better
-        // to fetch one)
-        // Assumption: There is a valid TipoZona associated with the Zona or we pick
-        // one.
-        // For simplicity, we use the Zona's type if available, otherwise we need logic.
-        // Looking at Entity Zona, does it have TipoZona? Yes.
-        TipoZona tipoZona = zona.getTipoZona(); // May need to fetch if lazy loading issues, but usually fine.
+        TipoZona tipoZona = zona.getTipoZona();
 
         for (int f = 1; f <= filas; f++) {
             for (int c = 1; c <= cols; c++) {

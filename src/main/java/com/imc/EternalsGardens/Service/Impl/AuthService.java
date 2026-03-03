@@ -57,7 +57,7 @@ public class AuthService {
                 if (foto != null && !foto.isEmpty()) {
                         try {
                                 String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
-                                String uploadDir = "src/main/resources/static/assets/fotosperfil/";
+                                String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
                                 Path uploadPath = Paths.get(uploadDir);
 
                                 if (!Files.exists(uploadPath)) {

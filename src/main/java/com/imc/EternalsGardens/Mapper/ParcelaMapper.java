@@ -35,8 +35,6 @@ public class ParcelaMapper {
         return parcela;
     }
 
-    // toResponse se mantiene con ModelMapper porque es más plano y Entity->DTO
-    // suele funcionar bien
     public ParcelaResponse toResponse(Parcela parcela) {
         if (parcela == null)
             return null;
@@ -65,11 +63,11 @@ public class ParcelaMapper {
         if (parcela.getDifuntosEnParcela() != null && !parcela.getDifuntosEnParcela().isEmpty()) {
             response.setDifuntos(difuntosEnParcelaMapper.toResponseList(parcela.getDifuntosEnParcela()));
         } else if (parcela.getDifuntosDirectos() != null && !parcela.getDifuntosDirectos().isEmpty()) {
-            // Fallback: Si no hay registro histórico, miramos la relación directa
+
             List<com.imc.EternalsGardens.DTO.Response.DifuntosEnParcelaResponse> fallbackList = parcela
                     .getDifuntosDirectos().stream()
                     .map(d -> com.imc.EternalsGardens.DTO.Response.DifuntosEnParcelaResponse.builder()
-                            .id(null) // No hay registro DEP
+                            .id(null)
                             .difuntoId(d.getId())
                             .difuntoNombreCompleto(d.getNombre() + " " + d.getApellidos())
                             .difuntoDni(d.getDni())

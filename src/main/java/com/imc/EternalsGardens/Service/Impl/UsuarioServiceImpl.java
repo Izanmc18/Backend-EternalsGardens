@@ -74,10 +74,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
             usuario.setCementerio(null);
         }
 
-        // Handle File Upload
         if (foto != null && !foto.isEmpty()) {
             try {
                 String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
+
                 String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
                 java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
 
@@ -111,13 +111,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
         org.springframework.data.domain.Page<Usuario> usuariosPage;
 
         if (rol != null && !rol.isBlank()) {
-            // Assuming we want to filter by role name. Use a Specification or custom query
-            // if needed.
-            // For simplicity, we can trust the repository ensures filtering if we add a
-            // method,
-            // OR we can fetch all and filter in memory (bad for performance),
-            // OR best: add findByRolNombre to Repository.
-            // Let's use the repository method we will add next.
+
             usuariosPage = usuarioRepository.findByRolNombreContainingIgnoreCase(rol, pageable);
         } else {
             usuariosPage = usuarioRepository.findAll(pageable);
@@ -204,21 +198,14 @@ public class UsuarioServiceImpl implements IUsuarioService {
             usuarioExistente.setContraseña(passwordEncoder.encode(request.getPassword()));
         }
 
-        // Create directory if not exists
-        // (Moved updateEntity before file logic to avoid overwrite)
         usuarioMapper.updateEntity(request, usuarioExistente);
 
-        // Handle File Upload
         if (foto != null && !foto.isEmpty()) {
             try {
                 String fileName = System.currentTimeMillis() + "_" + foto.getOriginalFilename();
 
-                // Use relative path to find frontend assets
-                // CWD is eternals-gardens-back. We need to go up one level.
-                java.nio.file.Path currentPath = java.nio.file.Paths.get(".").toAbsolutePath().normalize();
-                java.nio.file.Path projectRoot = currentPath.getParent(); // c:/.../EternalsGardens
-                java.nio.file.Path uploadPath = projectRoot
-                        .resolve("eternals-gardens-front/src/assets/images/fotosperfil");
+                String uploadDir = "c:/Users/Izan/DAW/2DAW/EternalsGardens/eternals-gardens-front/src/assets/images/fotosperfil/";
+                java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
 
                 System.out.println("DEBUG: Upload Path resolved to: " + uploadPath.toString());
 
@@ -236,7 +223,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
                 usuarioExistente.setFotoUrl("/assets/images/fotosperfil/" + fileName);
             } catch (Exception e) {
-                e.printStackTrace(); // Print stack trace to console
+                e.printStackTrace();
                 throw new ReglaNegocioException("Error al guardar la foto de perfil: " + e.getMessage());
             }
         }

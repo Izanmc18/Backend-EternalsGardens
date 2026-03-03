@@ -17,12 +17,10 @@ public class ApiError {
     private String mensaje;
     private String ruta;
 
-    // Constructor vacío
     public ApiError() {
         this.fecha = LocalDateTime.now();
     }
 
-    // Constructor útil
     public ApiError(HttpStatus status, String mensaje, String ruta) {
         this.fecha = LocalDateTime.now();
         this.codigo = status.value();

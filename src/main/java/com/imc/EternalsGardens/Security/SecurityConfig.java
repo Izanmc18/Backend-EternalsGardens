@@ -41,8 +41,7 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/images/**").permitAll()
-                                                .requestMatchers("/assets/**").permitAll() // Allow backend-served
-                                                                                           // assets
+                                                .requestMatchers("/assets/**").permitAll()
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/cementerios/**")
                                                 .permitAll()

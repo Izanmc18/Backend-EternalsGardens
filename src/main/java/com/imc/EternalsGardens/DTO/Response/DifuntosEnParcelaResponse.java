@@ -17,8 +17,8 @@ public class DifuntosEnParcelaResponse {
     private String difuntoNombreCompleto;
     private String difuntoDni;
     private java.time.LocalDate fechaDefuncion; // NECESARIO PARA TOOLTIP MAPA
-    private String sexo; // NEW
-    private String causa; // NEW
+    private String sexo;
+    private String causa;
 
     private Integer parcelaId;
     private String parcelaIdentificador;

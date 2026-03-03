@@ -29,9 +29,9 @@ public class DifuntoServiceImpl implements IDifuntoService {
     public DifuntoResponse crearDifunto(DifuntoRequest request, org.springframework.web.multipart.MultipartFile file) {
         System.out.println("DEBUG: Inicio crearDifunto");
         try {
-            // 0. Handle File Upload
+
             if (file != null && !file.isEmpty()) {
-                storageService.init(); // Ensure dir exists
+                storageService.init();
                 String url = storageService.store(file, "difuntos");
                 request.setFotoUrl(url);
             }
@@ -46,7 +46,6 @@ public class DifuntoServiceImpl implements IDifuntoService {
                         "Ya existe un difunto registrado con el DNI " + normalizedDni);
             }
 
-            // Update request
             request.setDni(normalizedDni);
 
             System.out.println("DEBUG: Mapeando a entidad...");
@@ -83,7 +82,6 @@ public class DifuntoServiceImpl implements IDifuntoService {
                 dep.setDifunto(guardado);
                 dep.setParcela(guardado.getParcela());
 
-                // Safe handling of Concesion
                 if (guardado.getParcela().getConcesion() != null) {
                     dep.setConcesion(guardado.getParcela().getConcesion());
                 }
@@ -91,7 +89,7 @@ public class DifuntoServiceImpl implements IDifuntoService {
                 dep.setFechaEnterramiento(java.time.LocalDate.now());
                 dep.setEstado("ENTERRADO");
 
-                difuntosEnParcelaRepository.save(dep); // Throws RuntimeException if fails
+                difuntosEnParcelaRepository.save(dep);
                 System.out.println("DEBUG: Registro Histórico DifuntosEnParcela creado.");
             }
 
@@ -132,7 +130,6 @@ public class DifuntoServiceImpl implements IDifuntoService {
         Difunto difunto = difuntoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Difunto no encontrado ID: " + id));
 
-        // Handle File Upload
         if (file != null && !file.isEmpty()) {
             storageService.init();
             String url = storageService.store(file, "difuntos");

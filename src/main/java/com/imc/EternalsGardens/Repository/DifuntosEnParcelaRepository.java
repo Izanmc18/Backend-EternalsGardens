@@ -36,8 +36,6 @@ public interface DifuntosEnParcelaRepository extends JpaRepository<DifuntosEnPar
 
     // --- MÉTODOS GLOBALES ---
 
-    // ESTE ES EL MÉTODO QUE DABA EL ERROR EN EL LOG
-    // Corregido: d.estado = 'ENTERRADO' (antes d.exhumado = false)
     @Query("SELECT d FROM DifuntosEnParcela d WHERE d.fechaEnterramiento >= :desdeHace AND d.estado = 'ENTERRADO' ORDER BY d.fechaEnterramiento DESC")
     List<DifuntosEnParcela> obtenerDifuntosInhumadosRecientes(@Param("desdeHace") LocalDate desdeHace);
 
